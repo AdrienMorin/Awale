@@ -1,0 +1,3 @@
+/Users/adrienmorin1/CLionProjects/Awale/cmake-build-debug/CMakeFiles/Awale.dir
+/Users/adrienmorin1/CLionProjects/Awale/cmake-build-debug/CMakeFiles/edit_cache.dir
+/Users/adrienmorin1/CLionProjects/Awale/cmake-build-debug/CMakeFiles/rebuild_cache.dir
