@@ -3,6 +3,7 @@
 #include <time.h>
 #include <string.h>
 #include "partie.h"
+#include "regles.h"
 
 partie* initialiserPartie(){
 
@@ -129,7 +130,7 @@ void afficherPartie(partie *p) {
 }
 
 int partieTerminee(partie* p){
-    return p->joueur1->nbGraines >= 25 || p->joueur2->nbGraines >= 25;
+    return finParFamine(p) || finParScore(p);
 }
 
 

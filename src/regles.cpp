@@ -46,3 +46,7 @@ int finParFamine(partie *p) {
     return TRUE;
 
 }
+
+int finParScore(partie *p) {
+    return p->joueur1->nbGraines >= 25 || p->joueur2->nbGraines >= 25;
+}
