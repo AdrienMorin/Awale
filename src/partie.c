@@ -3,7 +3,6 @@
 #include <time.h>
 #include <string.h>
 #include "partie.h"
-#include "regles.h"
 
 partie* initialiserPartie(){
 

@@ -5,7 +5,9 @@
 #include <stdlib.h>
 #include <time.h>
 #include "utils.h"
-#include "regles.h"
+
+#define TRUE 1
+#define FALSE 0
 
 int contains(const int* tab, int taille, int element){
     for(int i = 0; i < taille; i++){

@@ -1,4 +1,4 @@
-#include "regles.h"
+#include "partie.h"
 #include "utils.h"
 
 int adversaireNonAffame(partie* p, joueur* j, int caseChoisie){
@@ -25,8 +25,8 @@ int adversaireNonAffame(partie* p, joueur* j, int caseChoisie){
 int joueurVide(partie* p, joueur* j){
     int * plateau = p->plateau;
 
-    for (int i : j->cases) {
-        if (plateau[i] != 0) {
+    for (int i = 0; i < 6; i++) {
+        if (plateau[j->cases[i]] != 0) {
             return FALSE;
         }
     }
