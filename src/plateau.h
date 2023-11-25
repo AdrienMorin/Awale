@@ -11,4 +11,6 @@ void initialiserPlateau(int plateau[NB_CASES]);
 
 void afficherPlateau(int plateau[NB_CASES]);
 
+int * copierPlateau(int plateau[NB_CASES]);
+
 #endif //AWALE_PLATEAU_H

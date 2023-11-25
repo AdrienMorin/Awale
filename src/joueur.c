@@ -13,6 +13,12 @@ joueur* initialiserJoueur(char* nom){
     return j;
 }
 
+void initialiserCases(joueur* j, int numeroJoueur){
+    for(int i = 0; i < 6; i++){
+        j->cases[i] = (numeroJoueur == JOUEUR1) ? i : 11 - i;
+    }
+}
+
 void afficherJoueur(joueur *j) {
-    printf("Joueur %s : %d graines\n", j->nomUtilisateur, j->nbGraines);
+    printf("%s : %d graines\n", j->nomUtilisateur, j->nbGraines);
 }

@@ -6,5 +6,7 @@
 #define AWALE_UTILS_H
 
 
+int contains(const int* tab, int taille, int element);
+
 
 #endif //AWALE_UTILS_H

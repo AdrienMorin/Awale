@@ -13,10 +13,16 @@ void initialiserPlateau(int *plateau)
 
 void afficherPlateau(int *plateau)
 {
-    printf("  0 1 2 3 4 5\n");
-    printf(" ____________\n");
-    printf("|%d|%d|%d|%d|%d|%d|\n", plateau[11], plateau[10], plateau[9], plateau[8], plateau[7], plateau[6]);
-    printf("|%d|%d|%d|%d|%d|%d|\n", plateau[0], plateau[1], plateau[2], plateau[3], plateau[4], plateau[5]);
-    printf("|__|_|_|_|_|_|__|\n");
-    printf("  5 4 3 2 1 0\n");
+    printf(". _ . _ . _ . _ . _ . _ .\n");
+    printf("| %d | %d | %d | %d | %d | %d |\n", plateau[11], plateau[10], plateau[9], plateau[8], plateau[7], plateau[6]);
+    printf("|---|---|---|---|---|---|\n");
+    printf("| %d | %d | %d | %d | %d | %d |\n", plateau[0], plateau[1], plateau[2], plateau[3], plateau[4], plateau[5]);
+    printf("| _ | _ | _ | _ | _ | _ |\n");
+}
+
+int *copierPlateau(int *plateau)
+{
+    int *plateauCopie = malloc(sizeof(int) * NB_CASES);
+    memcpy(plateauCopie, plateau, sizeof(int) * NB_CASES);
+    return plateauCopie;
 }

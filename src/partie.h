@@ -24,6 +24,12 @@ int coupValide(partie* p, char* nomJoueur, int caseChoisie);
 
 int egrener(partie* p, joueur* j, int caseChoisie);
 
+void manger(partie* p, joueur* j, int caseArrivee);
+
+void afficherPartie(partie* p);
+
+int partieTerminee(partie* p);
+
 void finirPartie(partie* p);
 
 

@@ -7,10 +7,15 @@
 partie* initialiserPartie(){
 
     partie* p = malloc(sizeof(partie));
+
     p->joueur1 = initialiserJoueur("morin");
+    initialiserCases(p->joueur1, JOUEUR1);
+
     p->joueur2 = initialiserJoueur("mohamed");
-    p->quiJoue = choisirJoueurAleatoire(p->joueur1, p->joueur2);
+    initialiserCases(p->joueur2, JOUEUR2);
+
     // tirer au sort qui joue en premier aleatoirement
+    p->quiJoue = choisirJoueurAleatoire(p->joueur1, p->joueur2);
 
     initialiserPlateau(p->plateau);
 
@@ -35,13 +40,11 @@ void jouerCoup(partie* p, char* nomJoueur, int caseChoisie){
 
     int caseArrivee = egrener(p, p->quiJoue, caseChoisie);
 
+    manger(p, p->quiJoue, caseArrivee);
+
+    p->nbCoups++;
+
     p->quiJoue = (p->quiJoue == p->joueur1) ? p->joueur2 : p->joueur1;
-
-    printf("Case arrivee : %d\n", caseArrivee);
-
-    char * auTourDe = (p->quiJoue == p->joueur1) ? p->joueur1->nomUtilisateur : p->joueur2->nomUtilisateur;
-
-    printf("Au tour de : %s", auTourDe);
 
 }
 
@@ -62,6 +65,7 @@ int egrener(partie *p, joueur *j, int caseChoisie) {
         }
 
         p->plateau[(caseChoisie + i + 1) % 12]++;
+
     }
 
     int caseArrivee = (caseChoisie + graines) % 12;
@@ -69,46 +73,84 @@ int egrener(partie *p, joueur *j, int caseChoisie) {
     return caseArrivee;
 }
 
+void manger(partie *p, joueur *j, int caseArrivee) {
+
+    int nbGrainesMangees = 0;
+
+    // Tant qu'on tombe sur une case avec 2 ou 3 graines, on mange, puis on passe à la case précédente
+    while( p->plateau[caseArrivee] == 2 || p->plateau[caseArrivee] == 3 ){
+
+        nbGrainesMangees += p->plateau[caseArrivee];
+
+        p->plateau[caseArrivee] = 0;
+
+        caseArrivee = (caseArrivee - 1) % 12;
+
+    }
+
+    j->nbGraines += nbGrainesMangees;
+
+}
+
 int coupValide(partie *p, char* nomJoueur, int caseChoisie) {
 
     if(strcmp(nomJoueur, p->quiJoue->nomUtilisateur) != 0){
-        printf("Ce n'est pas a votre tour de jouer\n");
+        perror("Ce n'est pas a votre tour de jouer\n");
         return FALSE;
     }
 
     if((p->quiJoue == p->joueur1 && (caseChoisie < 0 || caseChoisie > 5))
        || (p->quiJoue == p->joueur2 && (caseChoisie < 6 || caseChoisie > 11))){
-        printf("Vous ne pouvez jouer que les cases de votre côté\n");
+        perror("Vous ne pouvez jouer que les cases de votre côté\n");
         return FALSE;
     }
 
     if(p->plateau[caseChoisie] == 0){
-        printf("Vous ne pouvez pas jouer une case vide\n");
+        perror("Vous ne pouvez pas jouer une case vide\n");
         return FALSE;
     }
 
     return TRUE;
 }
 
-int main(){
-    partie* p = initialiserPartie();
+void afficherPartie(partie *p) {
+
+    afficherJoueur(p->joueur2);
+
     afficherPlateau(p->plateau);
 
-    printf("Au tour de : ");
-    afficherJoueur(p->quiJoue);
+    afficherJoueur(p->joueur1);
+
+    printf("\n");
+
+    // print the name of the player whose turn it is, bold format only the name of the player, and make it purple
+    printf("\033[1;35m%s\033[0m, c'est a vous de jouer !\n", p->quiJoue->nomUtilisateur);
+
+}
+
+int partieTerminee(partie* p){
+    return p->joueur1->nbGraines >= 25 || p->joueur2->nbGraines >= 25;
+}
+
+
+int main(){
+
+    partie* p = initialiserPartie();
+    afficherPartie(p);
+
 
     while(TRUE){
         char nomJoueur[50];
         int caseChoisie;
 
-        printf("Entrez le nom du joueur et la case choisie séparés par un espace : ");
+        printf("Entrez le nom du joueur et la case choisie séparés par un espace : \r\n-> ");
 
         if(scanf("%49s %d", nomJoueur, &caseChoisie) != 2){
-            printf("Erreur de saisie\n");
+            printf("Erreur de saisie\r\n");
         }
         else{
             jouerCoup(p, nomJoueur, caseChoisie);
-            afficherPlateau(p->plateau);
+            afficherPartie(p);
         }
 
     }

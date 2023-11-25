@@ -9,4 +9,6 @@ add_executable(Awale
         src/plateau.c
         src/joueur.c
         src/utils.c
-        src/utils.h)
+        src/utils.h
+        src/regles.cpp
+        src/regles.h)
