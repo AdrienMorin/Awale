@@ -96,7 +96,6 @@ static void app(void)
 
          Client c = { csock };
 
-          // TODO : A changer par le username du joueur
          strncpy(c.name, buffer, BUF_SIZE - 1);
 
          clients[actual] = c;
@@ -116,10 +115,10 @@ static void app(void)
                 /* client disconnected */
                 if (c == 0) {
                     closesocket(clients[i].sock);
-                    printf("Nom du client qui se deco : %s \n", client.name);
+                    printf("Le client : %s se déconnecte du serveur\n", client.name);
                     remove_client(clients, i, &actual);
                     strncpy(buffer, client.name, BUF_SIZE - 1);
-                    strncat(buffer, " disconnected !", BUF_SIZE - strlen(buffer) - 1);
+                    strncat(buffer, " déconnecté !", BUF_SIZE - strlen(buffer) - 1);
                     send_message_to_all_clients(clients, client, actual, buffer, 1);
                 } else {
                     //  send_message_to_all_clients(clients, client, actual, buffer, 0);
@@ -128,11 +127,11 @@ static void app(void)
 
                     command input = parseCommand(commandString);
 
-                    if (input.code == LOGIN) {
+                    if (strcmp(clients[i].name, "unknown") == 0 && input.code == LOGIN) {
                         char *username = input.args[0];
                         char *password = input.args[1];
 
-                        printf("username : %s password : %s \n", username, password);
+                        printf("tentative de connexion, username : %s password : %s \n", username, password);
 
                         char *successMessage = "vous êtes connecté au serveur\n";
                         char *errorMessage = "mauvais username ou mot de passe\n";
@@ -140,11 +139,20 @@ static void app(void)
                         joueur *j = login(username, password);
                         if (j != NULL) {
                             strncpy(clients[i].name, username, BUF_SIZE - 1);
-                            printf("%s is connected \n", clients[i].name);
+                            printf("%s s'est connecté \n", clients[i].name);
                             write_client(client.sock, successMessage);
                         } else {
                             write_client(client.sock, errorMessage);
                         }
+                    }
+                    else if (strcmp(client.name, "unknown") != 0 && input.code == LOGIN) {
+                        char *errorMessage = "Vous êtes déjà connecté avec le pseudo : \n";
+                        strncat(errorMessage, client.name, strlen(errorMessage) + strlen(client.name));
+                        write_client(client.sock, errorMessage);
+                    }
+                    else if (strcmp(client.name, "unknown") == 0) {
+                        char *errorMessage = "Vous devez premièrement vous connecter à l'aide de :\nlogin <pseudo> <motdepasse>\nou bien\nregister <pseudo> <motdepasse>\nsi vous n'avez pas encore de compte";
+                        write_client(client.sock, errorMessage);
                     }
 
                     free(commandString);
