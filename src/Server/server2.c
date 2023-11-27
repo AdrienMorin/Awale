@@ -4,7 +4,8 @@
 #include <string.h>
 
 #include "server2.h"
-#include "client2.h"
+#include "../../Client Serveur V2/Serveur/client2.h"
+#include "actionManager.h"
 
 static void init(void)
 {
@@ -82,9 +83,11 @@ static void app(void)
          /* after connecting the client sends its name */
          if(read_client(csock, buffer) == -1)
          {
-            /* disconnected */
+             //* disconnected *//
             continue;
          }
+
+          printf("buffer : %s \n", buffer);
 
          /* what is the new maximum fd ? */
          max = csock > max ? csock : max;
@@ -92,7 +95,10 @@ static void app(void)
          FD_SET(csock, &rdfs);
 
          Client c = { csock };
+
+          // TODO : A changer par le username du joueur
          strncpy(c.name, buffer, BUF_SIZE - 1);
+
          clients[actual] = c;
          actual++;
       }
@@ -104,22 +110,46 @@ static void app(void)
             /* a client is talking */
             if(FD_ISSET(clients[i].sock, &rdfs))
             {
-               Client client = clients[i];
-               int c = read_client(clients[i].sock, buffer);
-               /* client disconnected */
-               if(c == 0)
-               {
-                  closesocket(clients[i].sock);
-                  remove_client(clients, i, &actual);
-                  strncpy(buffer, client.name, BUF_SIZE - 1);
-                  strncat(buffer, " disconnected !", BUF_SIZE - strlen(buffer) - 1);
-                  send_message_to_all_clients(clients, client, actual, buffer, 1);
-               }
-               else
-               {
-                  send_message_to_all_clients(clients, client, actual, buffer, 0);
-               }
-               break;
+                Client client = clients[i];
+                int c = read_client(clients[i].sock, buffer);
+
+                /* client disconnected */
+                if (c == 0) {
+                    closesocket(clients[i].sock);
+                    printf("Nom du client qui se deco : %s \n", client.name);
+                    remove_client(clients, i, &actual);
+                    strncpy(buffer, client.name, BUF_SIZE - 1);
+                    strncat(buffer, " disconnected !", BUF_SIZE - strlen(buffer) - 1);
+                    send_message_to_all_clients(clients, client, actual, buffer, 1);
+                } else {
+                    //  send_message_to_all_clients(clients, client, actual, buffer, 0);
+                    char *commandString = malloc(sizeof(char) * strlen(buffer));
+                    strcpy(commandString, buffer);
+
+                    command input = parseCommand(commandString);
+
+                    if (input.code == LOGIN) {
+                        char *username = input.args[0];
+                        char *password = input.args[1];
+
+                        printf("username : %s password : %s \n", username, password);
+
+                        char *successMessage = "vous êtes connecté au serveur\n";
+                        char *errorMessage = "mauvais username ou mot de passe\n";
+
+                        joueur *j = login(username, password);
+                        if (j != NULL) {
+                            strncpy(clients[i].name, username, BUF_SIZE - 1);
+                            printf("%s is connected \n", clients[i].name);
+                            write_client(client.sock, successMessage);
+                        } else {
+                            write_client(client.sock, errorMessage);
+                        }
+                    }
+
+                    free(commandString);
+                }
+                break;
             }
          }
       }

@@ -33,7 +33,7 @@ typedef struct in_addr IN_ADDR;
 
 #define BUF_SIZE    1024
 
-#include "client2.h"
+#include "../../Client Serveur V2/Serveur/client2.h"
 
 static void init(void);
 static void end(void);
