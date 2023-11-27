@@ -53,7 +53,7 @@ joueur *login(char *username, char *password) {
     while ((row = CsvParser_getRow(csvparser))) {
         const char **rowFields = CsvParser_getFields(row);
         if (strcmp(rowFields[0], username) == 0 && strcmp(rowFields[1], password) == 0) {
-            if (strcmp(rowFields[3], "1") == 0) {
+            if (strcmp(rowFields[2], "1") == 0) {
                 // Le joueur est déjà connecté
                 printf("tentative de login d'un utilisateur déjà connecté\n");
                 return NULL;

@@ -132,30 +132,3 @@ void afficherPartie(partie *p) {
 int partieTerminee(partie* p){
     return finParFamine(p) || finParScore(p);
 }
-
-
-int main(){
-
-    partie* p = initialiserPartie();
-    afficherPartie(p);
-
-
-    while(TRUE){
-        char nomJoueur[50];
-        int caseChoisie;
-
-        printf("Entrez le nom du joueur et la case choisie séparés par un espace : \r\n-> ");
-
-        if(scanf("%49s %d", nomJoueur, &caseChoisie) != 2){
-            printf("Erreur de saisie\r\n");
-        }
-        else{
-            jouerCoup(p, nomJoueur, caseChoisie);
-            afficherPartie(p);
-        }
-
-    }
-
-    finirPartie(p);
-    return 0;
-}

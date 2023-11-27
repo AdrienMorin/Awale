@@ -137,6 +137,7 @@ static void app(void)
                         char *errorMessage = "mauvais username ou mot de passe\n";
 
                         joueur *j = login(username, password);
+
                         if (j != NULL) {
                             strncpy(clients[i].name, username, BUF_SIZE - 1);
                             printf("%s s'est connecté \n", clients[i].name);
