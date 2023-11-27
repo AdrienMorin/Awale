@@ -3,8 +3,9 @@
 //
 
 #include "joueur.h"
-#include <malloc.h>
+#include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 joueur* initialiserJoueur(char* nom){
     joueur* j = malloc(sizeof(joueur));

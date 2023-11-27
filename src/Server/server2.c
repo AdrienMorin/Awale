@@ -4,7 +4,7 @@
 #include <string.h>
 
 #include "server2.h"
-#include "../../Client Serveur V2/Serveur/client2.h"
+#include "client2.h"
 #include "actionManager.h"
 
 static void init(void)
@@ -29,15 +29,15 @@ static void end(void)
 
 static void app(void)
 {
-   SOCKET sock = init_connection();
-   char buffer[BUF_SIZE];
-   /* the index for the array */
-   int actual = 0;
-   int max = sock;
-   /* an array for all clients */
-   Client clients[MAX_CLIENTS];
+    SOCKET sock = init_connection();
+    char buffer[BUF_SIZE];
+    /* the index for the array */
+    int actual = 0;
+    int max = sock;
+    /* an array for all clients */
+    Client clients[MAX_CLIENTS];
 
-   fd_set rdfs;
+    fd_set rdfs;
 
    while(1)
    {
