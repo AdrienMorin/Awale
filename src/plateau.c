@@ -13,11 +13,13 @@ void initialiserPlateau(int *plateau)
 
 void afficherPlateau(int *plateau)
 {
+    printf(" 11  10   9   8   7   6\n");
     printf(". _ . _ . _ . _ . _ . _ .\n");
     printf("| %d | %d | %d | %d | %d | %d |\n", plateau[11], plateau[10], plateau[9], plateau[8], plateau[7], plateau[6]);
     printf("|---|---|---|---|---|---|\n");
     printf("| %d | %d | %d | %d | %d | %d |\n", plateau[0], plateau[1], plateau[2], plateau[3], plateau[4], plateau[5]);
     printf("| _ | _ | _ | _ | _ | _ |\n");
+    printf("  0   1   2   3   4   5\n");
 }
 
 int *copierPlateau(int *plateau)

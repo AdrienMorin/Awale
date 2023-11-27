@@ -14,4 +14,5 @@ joueur * connecterJoueur(partie * p, int socket);
 // et si le mot de passe est correct. Si oui, il renvoie un pointeur
 // vers le joueur, sinon il renvoie NULL
 
+
 #endif //AWALE_JEU_H

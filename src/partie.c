@@ -1,4 +1,4 @@
-#include <malloc.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 #include <string.h>
@@ -116,6 +116,7 @@ int coupValide(partie *p, char* nomJoueur, int caseChoisie) {
 void afficherPartie(partie *p) {
 
     afficherJoueur(p->joueur2);
+    printf("\n");
 
     afficherPlateau(p->plateau);
 
