@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
+#include "../../lib/CsvParser/csvparser.h"
+#include "../../lib/cJSON/cJSON.h"
 
 #include "client2.h"
 

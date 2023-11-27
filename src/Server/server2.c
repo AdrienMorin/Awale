@@ -127,7 +127,7 @@ static void app(void)
 
                     command input = parseCommand(commandString);
 
-                    if (strcmp(clients[i].name, "unknown") == 0 && input.code == LOGIN) {
+                    if (input.code == LOGIN && strcmp(clients[i].name, "unknown") != 0) {
                         char *username = input.args[0];
                         char *password = input.args[1];
 
@@ -136,7 +136,7 @@ static void app(void)
                         char *successMessage = "vous êtes connecté au serveur\n";
                         char *errorMessage = "mauvais username ou mot de passe\n";
 
-                        joueur *j = login(username, password);
+                        joueur *j = getPlayerWithCredentials(username, password);
 
                         if (j != NULL) {
                             strncpy(clients[i].name, username, BUF_SIZE - 1);
@@ -167,6 +167,8 @@ static void app(void)
    clear_clients(clients, actual);
    end_connection(sock);
 }
+
+static void login_client(Client client,)
 
 static void clear_clients(Client *clients, int actual)
 {

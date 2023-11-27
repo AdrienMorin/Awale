@@ -9,7 +9,8 @@
 #define MAX_WORD_LENGTH 50
 
 #include "../joueur.h"
-#include "csvparser.h"
+#include "../../lib/CsvParser/csvparser.h"
+#include "../../lib/cJSON/cJSON.h"
 
 typedef struct {
     int code;
@@ -28,6 +29,8 @@ typedef enum {
 
 command parseCommand(char *buffer);
 
-joueur *login(char *username, char *password);
+joueur *getPlayerWithCredentials(char *username, char *password);
+
+
 
 #endif //AWALE_ACTIONMANAGER_H

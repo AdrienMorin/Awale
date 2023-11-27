@@ -1,0 +1,8 @@
+//
+// Created by Nour on 27/11/2023.
+//
+
+#ifndef AWALE_ACTIONMANAGER_H
+#define AWALE_ACTIONMANAGER_H
+
+#endif //AWALE_ACTIONMANAGER_H

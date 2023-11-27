@@ -21,17 +21,17 @@ command parseCommand(char *buffer) {
         i++;
     }
 
-    // if the first word is login, we send a message to the server
-    if (strcmp(words[0], "login") == 0) {
+    // if the first word is getPlayerWithCredentials, we send a message to the server
+    if (strcmp(words[0], "getPlayerWithCredentials") == 0) {
         if (i == 3) {
             char *username = words[1];
             char *password = words[2];
 
-            printf("login %s, %s\n", words[1], words[2]);
+            printf("getPlayerWithCredentials %s, %s\n", words[1], words[2]);
 
             return (command) {LOGIN, {username, password}};
         } else {
-            printf("tentative de login: nombre invalide d'arguments\n");
+            printf("tentative de getPlayerWithCredentials: nombre invalide d'arguments\n");
             return (command) {UNKNOWN, {}};
         }
     }
@@ -39,7 +39,7 @@ command parseCommand(char *buffer) {
     return (command) {UNKNOWN, {}};
 }
 
-joueur *login(char *username, char *password) {
+joueur *getPlayerWithCredentials(char *username, char *password) {
     int i = 0;
     CsvParser *csvparser = CsvParser_new("data/users.csv", ",", 1);
     CsvRow *row;
@@ -55,7 +55,7 @@ joueur *login(char *username, char *password) {
         if (strcmp(rowFields[0], username) == 0 && strcmp(rowFields[1], password) == 0) {
             if (strcmp(rowFields[2], "1") == 0) {
                 // Le joueur est déjà connecté
-                printf("tentative de login d'un utilisateur déjà connecté\n");
+                printf("tentative de getPlayerWithCredentials d'un utilisateur déjà connecté\n");
                 return NULL;
             }
             joueur *j = initialiserJoueur(username);
