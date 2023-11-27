@@ -9,6 +9,7 @@
 #define MAX_WORD_LENGTH 50
 
 #include "../joueur.h"
+#include "csvparser.h"
 
 typedef struct {
     int code;
