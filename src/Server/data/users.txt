@@ -1,0 +1,3 @@
+username,password,isConnected
+momo,momo,0
+john,doe,0
