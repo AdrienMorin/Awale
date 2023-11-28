@@ -8,35 +8,84 @@
 #include "actionManager.h"
 
 
-command parseCommand(char *buffer) {
-    // split the content of the buffer on the space elements, and store it in an array
-    char *token = strtok(buffer, " ");
-    char *words[MAX_WORDS];
-    int i = 0;
+//command parseRequest(jsonString request) {
+//    // split the content of the buffer on the space elements, and store it in an array
+//    char *token = strtok(buffer, " ");
+//    char *words[MAX_WORDS];
+//    int i = 0;
+//
+//    while (token != NULL && i < MAX_WORDS) {
+//        words[i] = malloc(strlen(token) + 1);
+//        strcpy(words[i], token);
+//        token = strtok(NULL, " ");
+//        i++;
+//    }
+//
+//    // if the first word is getPlayerWithCredentials, we send a message to the server
+//    if (strcmp(words[0], "getPlayerWithCredentials") == 0) {
+//        if (i == 3) {
+//            char *username = words[1];
+//            char *password = words[2];
+//
+//            printf("getPlayerWithCredentials %s, %s\n", words[1], words[2]);
+//
+//            return (command) {LOGIN, {username, password}};
+//        } else {
+//            printf("tentative de getPlayerWithCredentials: nombre invalide d'arguments\n");
+//            return (command) {UNKNOWN, {}};
+//        }
+//    }
+//
+//    return (command) {UNKNOWN, {}};
+//}
 
-    while (token != NULL && i < MAX_WORDS) {
-        words[i] = malloc(strlen(token) + 1);
-        strcpy(words[i], token);
-        token = strtok(NULL, " ");
-        i++;
+cJSON processRequest(Client client, jsonString req) {
+    cJSON *requestJson = cJSON_Parse(req);
+
+    cJSON *command = cJSON_GetObjectItemCaseSensitive(requestJson, "command");
+
+    char *commandString = cJSON_GetStringValue(command);
+
+    if (strncmp(commandString, "login", 5) == 0) {
+        cJSON *username = cJSON_GetObjectItemCaseSensitive(requestJson, "username");
+        cJSON *password = cJSON_GetObjectItemCaseSensitive(requestJson, "password");
+
+        char *usernameString = cJSON_GetStringValue(username);
+        char *passwordString = cJSON_GetStringValue(password);
+
+        printf("Tentative de connexion, username : %s password : %s \n", usernameString, passwordString);
+
+        return login(client, usernameString, passwordString);
     }
 
-    // if the first word is getPlayerWithCredentials, we send a message to the server
-    if (strcmp(words[0], "getPlayerWithCredentials") == 0) {
-        if (i == 3) {
-            char *username = words[1];
-            char *password = words[2];
+}
 
-            printf("getPlayerWithCredentials %s, %s\n", words[1], words[2]);
+cJSON login(Client client, char *username, char *password) {
 
-            return (command) {LOGIN, {username, password}};
-        } else {
-            printf("tentative de getPlayerWithCredentials: nombre invalide d'arguments\n");
-            return (command) {UNKNOWN, {}};
+    joueur *j = getPlayerWithCredentials(username, password);
+
+    if (j != NULL) {
+        cJSON *response = cJSON_CreateObject();
+        cJSON_AddStringToObject(response, "response", "success");
+        cJSON_AddStringToObject(response, "message", "vous êtes connecté au serveur");
+        cJSON_AddStringToObject(response, "username", j->nomUtilisateur);
+        cJSON_AddNumberToObject(response, "nbGraines", j->nbGraines);
+
+        // parse cases
+        cJSON *cases = cJSON_CreateArray();
+        for (int i = 0; i < 6; i++) {
+            cJSON_AddItemToArray(cases, cJSON_CreateNumber(j->cases[i]));
         }
-    }
+        cJSON_AddItemToObject(response, "cases", cases);
 
-    return (command) {UNKNOWN, {}};
+        client.j = copierJoueur(j);
+        return *response;
+    } else {
+        cJSON *response = cJSON_CreateObject();
+        cJSON_AddStringToObject(response, "response", "error");
+        cJSON_AddStringToObject(response, "message", "mauvais username ou mot de passe");
+        return *response;
+    }
 }
 
 joueur *getPlayerWithCredentials(char *username, char *password) {

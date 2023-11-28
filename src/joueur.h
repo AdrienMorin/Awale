@@ -14,6 +14,8 @@ typedef struct joueur
 
 joueur* initialiserJoueur(char* nom);
 
+joueur *copierJoueur(joueur *j);
+
 void initialiserCases(joueur* j, int numeroJoueur);
 
 void afficherJoueur(joueur* j);

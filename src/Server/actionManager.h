@@ -11,6 +11,9 @@
 #include "../joueur.h"
 #include "../../lib/CsvParser/csvparser.h"
 #include "../../lib/cJSON/cJSON.h"
+#include "server2.h"
+
+typedef char *jsonString;
 
 typedef struct {
     int code;
@@ -27,7 +30,12 @@ typedef enum {
     UNKNOWN
 } commandCode;
 
-command parseCommand(char *buffer);
+cJSON parseRequest(jsonString request);
+
+cJSON processRequest(Client client, jsonString req);
+
+cJSON login(Client client, char *username, char *password);
+
 
 joueur *getPlayerWithCredentials(char *username, char *password);
 

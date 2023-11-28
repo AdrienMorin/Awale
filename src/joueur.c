@@ -23,3 +23,13 @@ void initialiserCases(joueur* j, int numeroJoueur){
 void afficherJoueur(joueur *j) {
     printf("%s : %d graines\n", j->nomUtilisateur, j->nbGraines);
 }
+
+joueur *copierJoueur(joueur *j) {
+    joueur *j2 = malloc(sizeof(joueur));
+    strcpy(j2->nomUtilisateur, j->nomUtilisateur);
+    j2->nbGraines = j->nbGraines;
+    for (int i = 0; i < 6; i++) {
+        j2->cases[i] = j->cases[i];
+    }
+    return j2;
+}
