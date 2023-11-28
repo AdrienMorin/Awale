@@ -34,9 +34,13 @@ cJSON parseRequest(jsonString request);
 
 cJSON processRequest(Client *client, Client clients[], int nbClients, jsonString req);
 
-cJSON login(Client *client, char *username, char *password);
+cJSON login(Client *client, char *username, char *password, Client *clients, int nbClients);
+
+cJSON registerClient(char *username, char *password);
 
 cJSON sendChallengeRequest(Client *client, Client clients[], int nbClients, char *username);
+
+cJSON sendChat(Client *client, Client clients[], int nbClients, char *username, char *message);
 
 cJSON acceptChallenge(Client *client);
 
@@ -47,7 +51,6 @@ cJSON listConnectedPlayers(Client *c, Client *clients, int nbClients);
 joueur *getPlayerWithCredentials(char *username, char *password);
 
 Client *getClientByUsername(char *username, Client *clients, int nbClients);
-
 
 
 #endif //AWALE_ACTIONMANAGER_H

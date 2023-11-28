@@ -17,7 +17,11 @@ jsonString parseRequest(char *buffer);
 
 jsonString parseLogin(char *args[]);
 
+jsonString parseRegister(char *args[]);
+
 jsonString parseChallenge(char *args[]);
+
+jsonString parseChat(char *args[], char *message);
 
 jsonString acceptChallenge();
 

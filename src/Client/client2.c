@@ -78,8 +78,9 @@ static void app(const char *address) {
                 printf("Invalid command\n");
             } else if (connected == FALSE &&
                        (strncmp(commandString, "login", 5) != 0 && strncmp(commandString, "register", 8) != 0)) {
-                printf("You must be connected to do this action\n");
-                printf("Please login first : login <username> <password>\n");
+                printf("Vous devez être connecté pour faire cette action.\n");
+                printf("Veuillez vous connecter : login <username> <password>\n");
+                printf("Ou bien vous enregistrer : register <username> <password>\n");
             } else {
                 write_server(sock, request);
             }

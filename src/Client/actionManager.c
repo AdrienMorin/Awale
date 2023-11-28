@@ -39,6 +39,15 @@ jsonString parseRequest(char *buffer) {
         } else {
             return parseLogin(words);
         }
+    } else if (strcmp(words[0], "register") == 0) {
+        if (i != 3) {
+            printf("Tentative d'inscription: nombre invalide d'arguments\n");
+            printf("Usage: register <username> <password>\n");
+
+            return "error";
+        } else {
+            return parseRegister(words);
+        }
     } else if (strcmp(words[0], "list") == 0) {
         if (i != 1) {
             printf("Tentative de list: nombre invalide d'arguments\n");
@@ -63,6 +72,17 @@ jsonString parseRequest(char *buffer) {
         } else {
 
             return parseChallenge(words);
+        }
+    } else if (strncmp(words[0], "chat", 4) == 0) {
+        if (i != 2) {
+            printf("Tentative de chat: nombre invalide d'arguments\n");
+            printf("Usage: chat <username>\n");
+            return "error";
+        } else {
+            char message[500];
+            printf("Entrez votre message (max 500 caractères): ");
+            scanf(" %[^\n]", message);
+            return parseChat(words, message);
         }
     } else if (strncmp(words[0], "accept", 6) == 0) {
         if (i != 1) {
@@ -102,6 +122,35 @@ jsonString parseLogin(char *args[]) {
 
 }
 
+jsonString parseRegister(char *args[]) {
+    cJSON *request = cJSON_CreateObject();
+
+    cJSON *command = cJSON_CreateString("register");
+    cJSON *username = cJSON_CreateString(args[1]);
+    cJSON *password = cJSON_CreateString(args[2]);
+
+    cJSON_AddItemToObject(request, "command", command);
+    cJSON_AddItemToObject(request, "username", username);
+    cJSON_AddItemToObject(request, "password", password);
+
+    return cJSON_Print(request);
+
+}
+
+jsonString parseChat(char *args[], char *message){
+    cJSON *request = cJSON_CreateObject();
+
+    cJSON *command = cJSON_CreateString("chat");
+    cJSON *username = cJSON_CreateString(args[1]);
+    cJSON *jsonMessage = cJSON_CreateString(message);
+
+    cJSON_AddItemToObject(request, "command", command);
+    cJSON_AddItemToObject(request, "username", username);
+    cJSON_AddItemToObject(request, "message", jsonMessage);
+
+    return cJSON_Print(request);
+}
+
 jsonString parseChallenge(char *args[]) {
     cJSON *request = cJSON_CreateObject();
 
@@ -139,6 +188,7 @@ void processResponse(cJSON *response, int *connected) {
         if (strncmp(statusString, "success", 7) == 0) {
             j = initialiserJoueur(username);
             *connected = TRUE;
+            printf("Vous êtes connecté au serveur\n");
         } else {
             printf("Login failed\n");
         }
@@ -158,6 +208,22 @@ void processResponse(cJSON *response, int *connected) {
             printf("%s %s !\n", message, opponent);
         } else {
             printf("%s\n", message);
+        }
+    }
+
+    if (strncmp(commandString, "chat", 4) == 0) {
+        cJSON *status = cJSON_GetObjectItemCaseSensitive(response, "status");
+
+        char *statusString = cJSON_GetStringValue(status);
+
+        char *from = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(response, "from"));
+
+        char *message = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(response, "message"));
+
+        if (strncmp(statusString, "success", 7) == 0) {
+            printf("Message de %s : %s\n", from, message);
+        } else {
+            printf("erreur de communication chat avec %s\n", from);
         }
     }
 
