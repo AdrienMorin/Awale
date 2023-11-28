@@ -100,9 +100,9 @@ static void app(void) {
                         closesocket(clients[i].sock);
                         printf("Le client : %s se déconnecte du serveur\n", client.name);
                         remove_client(clients, i, &actual);
-                        strncpy(buffer, client.name, BUF_SIZE - 1);
+                        /*strncpy(buffer, client.name, BUF_SIZE - 1);
                         strncat(buffer, " déconnecté !", BUF_SIZE - strlen(buffer) - 1);
-                        send_message_to_all_clients(clients, client, actual, buffer, 1);
+                        send_message_to_all_clients(clients, client, actual, buffer, 1);*/
                     } else {
                         //  send_message_to_all_clients(clients, client, actual, buffer, 0);
                         char *commandString = malloc(sizeof(char) * strlen(buffer));
