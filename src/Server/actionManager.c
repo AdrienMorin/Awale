@@ -39,7 +39,7 @@
 //    return (command) {UNKNOWN, {}};
 //}
 
-cJSON processRequest(Client client, jsonString req) {
+cJSON processRequest(Client client, Client *clients, int nbClients, jsonString req) {
     cJSON *requestJson = cJSON_Parse(req);
 
     cJSON *command = cJSON_GetObjectItemCaseSensitive(requestJson, "command");
@@ -58,6 +58,10 @@ cJSON processRequest(Client client, jsonString req) {
         return login(client, usernameString, passwordString);
     }
 
+    if (strncmp(commandString, "list", 4) == 0) {
+        return listConnectedPlayers(client, clients, nbClients);
+    }
+
 }
 
 cJSON login(Client client, char *username, char *password) {
@@ -66,7 +70,8 @@ cJSON login(Client client, char *username, char *password) {
 
     if (j != NULL) {
         cJSON *response = cJSON_CreateObject();
-        cJSON_AddStringToObject(response, "response", "success");
+        cJSON_AddStringToObject(response, "command", "login");
+        cJSON_AddStringToObject(response, "status", "success");
         cJSON_AddStringToObject(response, "message", "vous êtes connecté au serveur");
         cJSON_AddStringToObject(response, "username", j->nomUtilisateur);
         cJSON_AddNumberToObject(response, "nbGraines", j->nbGraines);
@@ -118,4 +123,27 @@ joueur *getPlayerWithCredentials(char *username, char *password) {
 
     return NULL;
 
+}
+
+cJSON listConnectedPlayers(Client c, Client *clients, int nbClients) {
+    cJSON *response = cJSON_CreateObject();
+    cJSON_AddStringToObject(response, "command", "list");
+
+    cJSON *players = cJSON_CreateArray();
+
+    for (int i = 0; i < nbClients; i++) {
+
+        // On ne va quand meme pas dire au client qu'il est connecté dans la liste des participants !
+        if (clients[i].sock == c.sock) {
+            continue;
+        }
+
+        cJSON *player = cJSON_CreateObject();
+        cJSON_AddStringToObject(player, "username", clients[i].j->nomUtilisateur);
+        cJSON_AddNumberToObject(player, "socket", clients[i].sock);
+        cJSON_AddItemToArray(players, player);
+
+    }
+
+    return *response;
 }

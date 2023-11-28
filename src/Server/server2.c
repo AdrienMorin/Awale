@@ -110,10 +110,12 @@ static void app(void) {
                         char *commandString = malloc(sizeof(char) * strlen(buffer));
                         strcpy(commandString, buffer);
 
-                        cJSON response = processRequest(client, commandString);
+                        cJSON response = processRequest(clients[i], clients, actual, commandString);
 
                         jsonString responseString = cJSON_Print(&response);
+
                         write_client(client.sock, responseString);
+
                         free(commandString);
                     }
                     break;

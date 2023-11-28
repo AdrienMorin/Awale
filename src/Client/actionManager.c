@@ -32,6 +32,23 @@ jsonString parseRequest(char *buffer) {
             return parseLogin(words);
         }
     }
+
+    if (strcmp(words[0], "list") == 0) {
+        if (i != 1) {
+            return "error";
+        } else {
+            cJSON *request = cJSON_CreateObject();
+
+            cJSON *command = cJSON_CreateString("list");
+
+
+            cJSON_AddItemToObject(request, "command", command);
+
+            return cJSON_Print(request);
+        }
+    }
+
+
 }
 
 jsonString parseLogin(char *args[]) {

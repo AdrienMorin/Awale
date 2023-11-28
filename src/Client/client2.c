@@ -5,6 +5,8 @@
 
 #include "actionManager.h"
 #include "client2.h"
+#include "../../lib/cJSON/cJSON.h"
+#include "../partie.h"
 
 static void init(void) {
 #ifdef WIN32
@@ -32,6 +34,10 @@ static void app(const char *address) {
 
     /* send our name */
     write_server(sock, "unknown");
+
+    int connected = FALSE;
+
+    joueur *j = NULL;
 
     while (1) {
         FD_ZERO(&rdfs);
@@ -76,6 +82,50 @@ static void app(const char *address) {
                 printf("Server disconnected !\n");
                 break;
             }
+
+            cJSON *response = cJSON_Parse(buffer);
+
+            if (response == NULL) {
+                const char *error_ptr = cJSON_GetErrorPtr();
+                if (error_ptr != NULL) {
+                    fprintf(stderr, "Error before: %s\n", error_ptr);
+                }
+            }
+
+            cJSON *command = cJSON_GetObjectItemCaseSensitive(response, "command");
+
+            char *commandString = cJSON_GetStringValue(command);
+
+            if (strncmp(commandString, "login", 5) == 0) {
+                cJSON *status = cJSON_GetObjectItemCaseSensitive(response, "status");
+
+                char *statusString = cJSON_GetStringValue(status);
+
+                char *username = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(response, "username"));
+
+                if (strncmp(statusString, "success", 7) == 0) {
+                    j = initialiserJoueur(username);
+                    connected = TRUE;
+                } else {
+                    printf("Login failed\n");
+                }
+            }
+
+            if (connected == TRUE) {
+
+                if (strncmp(commandString, "start", 5) == 0) {
+                    cJSON *status = cJSON_GetObjectItemCaseSensitive(response, "status");
+
+                    char *statusString = cJSON_GetStringValue(status);
+
+                    if (strncmp(statusString, "success", 7) == 0) {
+                        printf("Played\n");
+                    } else {
+                        printf("Not played\n");
+                    }
+                }
+            }
+
             puts(buffer);
         }
     }
