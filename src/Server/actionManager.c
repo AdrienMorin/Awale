@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 #include "actionManager.h"
 
 
@@ -60,6 +61,20 @@ cJSON processRequest(Client *client, Client clients[], int nbClients, jsonString
 
     if (strncmp(commandString, "list", 4) == 0) {
         return listConnectedPlayers(client, clients, nbClients);
+    }
+
+    if (strncmp(commandString, "challenge", 9) == 0) {
+        cJSON *username = cJSON_GetObjectItemCaseSensitive(requestJson, "username");
+        char *usernameString = cJSON_GetStringValue(username);
+
+        // Il faut savoir si le challenge est en attente ou non
+        char *stateString = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(requestJson, "state"));
+
+        if (strncmp(stateString, "pending", 7) == 0) {
+
+            // On envoie une demande de challenge
+            return sendChallengeRequest(client, clients, nbClients, usernameString);
+        }
     }
 
 }
@@ -151,4 +166,49 @@ cJSON listConnectedPlayers(Client *c, Client *clients, int nbClients) {
     }
 
     return *response;
+}
+
+cJSON sendChallengeRequest(Client *client, Client *clients, int nbClients, char *username) {
+    // envoyer la requete de challenge au bon client
+    cJSON *response = cJSON_CreateObject();
+
+    Client *adversaire = getClientByUsername(username, clients, nbClients);
+
+    if (adversaire == NULL) {
+        cJSON_AddStringToObject(response, "command", "challenge");
+        cJSON_AddStringToObject(response, "status", "error");
+        cJSON_AddStringToObject(response, "message", "L'utilisateur n'existe pas");
+        return *response;
+    }
+
+    cJSON_AddStringToObject(response, "command", "challenge");
+    cJSON_AddStringToObject(response, "status", "success");
+    cJSON_AddStringToObject(response, "message", "Demande de challenge envoyée");
+    cJSON_AddStringToObject(response, "username", username);
+    cJSON_AddNumberToObject(response, "socket", adversaire->sock);
+    cJSON_AddStringToObject(response, "state", "sent");
+
+
+    // write the challenge request to the right client too
+
+    cJSON *challengeRequest = cJSON_CreateObject();
+    cJSON_AddStringToObject(challengeRequest, "command", "challenge");
+    cJSON_AddStringToObject(challengeRequest, "status", "success");
+    cJSON_AddStringToObject(challengeRequest, "message", "Vous avez reçu une demande de challenge");
+    cJSON_AddStringToObject(challengeRequest, "opponent", client->name);
+    cJSON_AddNumberToObject(challengeRequest, "socket", client->sock);
+    cJSON_AddStringToObject(challengeRequest, "state", "pending");
+
+    write_client(adversaire->sock, cJSON_Print(challengeRequest));
+
+    return *response;
+}
+
+Client *getClientByUsername(char *username, Client *clients, int nbClients) {
+    for (int i = 0; i < nbClients; i++) {
+        if (strcmp(clients[i].j->nomUtilisateur, username) == 0) {
+            return &clients[i];
+        }
+    }
+    return NULL;
 }

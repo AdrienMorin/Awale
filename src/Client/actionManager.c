@@ -7,8 +7,12 @@
 #include <stdio.h>
 #include "actionManager.h"
 #include "../../lib/cJSON/cJSON.h"
+#include "../partie.h"
 
 #define MAX_WORDS 50
+
+
+joueur *j;
 
 jsonString parseRequest(char *buffer) {
     // split the content of the buffer on the space elements, and store it in an array
@@ -85,9 +89,50 @@ jsonString parseChallenge(char *args[]) {
 
     cJSON *command = cJSON_CreateString("challenge");
     cJSON *username = cJSON_CreateString(args[1]);
+    cJSON *state = cJSON_CreateString("pending");
 
     cJSON_AddItemToObject(request, "command", command);
     cJSON_AddItemToObject(request, "username", username);
+    cJSON_AddItemToObject(request, "state", state);
 
     return cJSON_Print(request);
+}
+
+void processResponse(cJSON *response, int *connected) {
+
+    if (response == NULL) {
+        const char *error_ptr = cJSON_GetErrorPtr();
+        if (error_ptr != NULL) {
+            fprintf(stderr, "Error before: %s\n", error_ptr);
+        }
+    }
+
+    cJSON *command = cJSON_GetObjectItemCaseSensitive(response, "command");
+
+    char *commandString = cJSON_GetStringValue(command);
+
+    if (strncmp(commandString, "login", 5) == 0) {
+        cJSON *status = cJSON_GetObjectItemCaseSensitive(response, "status");
+
+        char *statusString = cJSON_GetStringValue(status);
+
+        char *username = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(response, "username"));
+
+        if (strncmp(statusString, "success", 7) == 0) {
+            j = initialiserJoueur(username);
+            *connected = TRUE;
+        } else {
+            printf("Login failed\n");
+        }
+    }
+
+    if (*connected == TRUE) {
+
+        if (strncmp(commandString, "challenge", 9) == 0) {
+            cJSON *status = cJSON_GetObjectItemCaseSensitive(response, "status");
+
+            char *statusString = cJSON_GetStringValue(status);
+
+        }
+    }
 }

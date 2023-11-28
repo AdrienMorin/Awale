@@ -36,9 +36,13 @@ cJSON processRequest(Client *client, Client clients[], int nbClients, jsonString
 
 cJSON login(Client *client, char *username, char *password);
 
+cJSON sendChallengeRequest(Client *client, Client clients[], int nbClients, char *username);
+
 cJSON listConnectedPlayers(Client *c, Client *clients, int nbClients);
 
 joueur *getPlayerWithCredentials(char *username, char *password);
+
+Client *getClientByUsername(char *username, Client *clients, int nbClients);
 
 
 
