@@ -9,7 +9,7 @@ typedef char *jsonString;
 
 jsonString parseRequest(char *buffer);
 
-jsonString parseLogin(char *buffer[]);
+jsonString parseLogin(char *args[]);
 
-
+jsonString parseChallenge(char *args[]);
 #endif //AWALE_ACTIONMANAGER_H

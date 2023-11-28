@@ -27,14 +27,18 @@ jsonString parseRequest(char *buffer) {
 
     if (strcmp(words[0], "login") == 0) {
         if (i != 3) {
+            printf("Tentative de connexion: nombre invalide d'arguments\n");
+            printf("Usage: login <username> <password>\n");
+
             return "error";
         } else {
             return parseLogin(words);
         }
-    }
-
-    if (strcmp(words[0], "list") == 0) {
+    } else if (strcmp(words[0], "list") == 0) {
         if (i != 1) {
+            printf("Tentative de list: nombre invalide d'arguments\n");
+            printf("Usage: list\n");
+
             return "error";
         } else {
             cJSON *request = cJSON_CreateObject();
@@ -46,8 +50,18 @@ jsonString parseRequest(char *buffer) {
 
             return cJSON_Print(request);
         }
+    } else if (strncmp(words[0], "challenge", 9) == 0) {
+        if (i != 2) {
+            printf("Tentative de challenge: nombre invalide d'arguments\n");
+            printf("Usage: challenge <username>\n");
+            return "error";
+        } else {
+
+            return parseChallenge(words);
+        }
     }
 
+    return "error";
 
 }
 
@@ -64,4 +78,16 @@ jsonString parseLogin(char *args[]) {
 
     return cJSON_Print(request);
 
+}
+
+jsonString parseChallenge(char *args[]) {
+    cJSON *request = cJSON_CreateObject();
+
+    cJSON *command = cJSON_CreateString("challenge");
+    cJSON *username = cJSON_CreateString(args[1]);
+
+    cJSON_AddItemToObject(request, "command", command);
+    cJSON_AddItemToObject(request, "username", username);
+
+    return cJSON_Print(request);
 }

@@ -68,9 +68,17 @@ static void app(const char *address) {
             }
 
             jsonString request = parseRequest(buffer);
+            cJSON *requestJson = cJSON_Parse(request);
+
+            cJSON *command = cJSON_GetObjectItemCaseSensitive(requestJson, "command");
+
+            char *commandString = cJSON_GetStringValue(command);
 
             if (strncmp(request, "error", 5) == 0) {
                 printf("Invalid command\n");
+            } else if (connected == FALSE && strncmp(commandString, "login", 5) != 0) {
+                printf("You must be connected to do this action\n");
+                printf("Please login first : login <username> <password>\n");
             } else {
                 write_server(sock, request);
             }
