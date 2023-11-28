@@ -76,7 +76,8 @@ static void app(const char *address) {
 
             if (strncmp(request, "error", 5) == 0) {
                 printf("Invalid command\n");
-            } else if (connected == FALSE && strncmp(commandString, "login", 5) != 0) {
+            } else if (connected == FALSE &&
+                       (strncmp(commandString, "login", 5) != 0 || strncmp(commandString, "register", 8) != 0)) {
                 printf("You must be connected to do this action\n");
                 printf("Please login first : login <username> <password>\n");
             } else {
