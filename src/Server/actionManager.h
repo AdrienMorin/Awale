@@ -38,6 +38,10 @@ cJSON login(Client *client, char *username, char *password);
 
 cJSON sendChallengeRequest(Client *client, Client clients[], int nbClients, char *username);
 
+cJSON acceptChallenge(Client *client);
+
+cJSON refuseChallenge(Client *client);
+
 cJSON listConnectedPlayers(Client *c, Client *clients, int nbClients);
 
 joueur *getPlayerWithCredentials(char *username, char *password);

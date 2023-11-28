@@ -14,6 +14,7 @@
 
 joueur *j;
 
+
 jsonString parseRequest(char *buffer) {
     // split the content of the buffer on the space elements, and store it in an array
     char *token = strtok(buffer, " ");
@@ -62,6 +63,23 @@ jsonString parseRequest(char *buffer) {
         } else {
 
             return parseChallenge(words);
+        }
+    } else if (strncmp(words[0], "accept", 6) == 0) {
+        if (i != 1) {
+            printf("Tentative de challenge: nombre invalide d'arguments\n");
+            printf("Usage: accept\n");
+            return "error";
+        } else {
+
+            return acceptChallenge();
+        }
+    } else if (strncmp(words[0], "refuse", 6) == 0) {
+        if (i != 1) {
+            printf("Tentative de challenge: nombre invalide d'arguments\n");
+            printf("Usage: refuse\n");
+            return "error";
+        } else {
+            return refuseChallenge();
         }
     }
 
@@ -126,13 +144,73 @@ void processResponse(cJSON *response, int *connected) {
         }
     }
 
-    if (*connected == TRUE) {
 
-        if (strncmp(commandString, "challenge", 9) == 0) {
-            cJSON *status = cJSON_GetObjectItemCaseSensitive(response, "status");
+    if (strncmp(commandString, "challenge", 9) == 0) {
+        cJSON *status = cJSON_GetObjectItemCaseSensitive(response, "status");
 
-            char *statusString = cJSON_GetStringValue(status);
+        char *statusString = cJSON_GetStringValue(status);
 
+        char *opponent = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(response, "opponent"));
+
+        char *message = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(response, "message"));
+
+        if (strncmp(statusString, "success", 7) == 0) {
+            printf("%s %s !\n", message, opponent);
+        } else {
+            printf("%s\n", message);
         }
     }
+
+    if (strncmp(commandString, "accept", 6) == 0) {
+        cJSON *status = cJSON_GetObjectItemCaseSensitive(response, "status");
+
+        char *statusString = cJSON_GetStringValue(status);
+
+        char *opponent = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(response, "opponent"));
+
+        char *message = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(response, "message"));
+
+        if (strncmp(statusString, "success", 7) == 0) {
+            printf("Entering game with %s !\n", opponent);
+        } else {
+            printf("%s\n", message);
+        }
+    }
+
+    if (strncmp(commandString, "refuse", 6) == 0) {
+        cJSON *status = cJSON_GetObjectItemCaseSensitive(response, "status");
+
+        char *statusString = cJSON_GetStringValue(status);
+
+        char *opponent = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(response, "opponent"));
+
+        char *message = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(response, "message"));
+
+        if (strncmp(statusString, "success", 7) == 0) {
+            printf("%s refused your challenge !\n", opponent);
+        } else {
+            printf("%s\n", message);
+        }
+    }
+
+}
+
+jsonString acceptChallenge() {
+    cJSON *request = cJSON_CreateObject();
+
+    cJSON *command = cJSON_CreateString("accept");
+
+    cJSON_AddItemToObject(request, "command", command);
+
+    return cJSON_Print(request);
+}
+
+jsonString refuseChallenge() {
+    cJSON *request = cJSON_CreateObject();
+
+    cJSON *command = cJSON_CreateString("refuse");
+
+    cJSON_AddItemToObject(request, "command", command);
+
+    return cJSON_Print(request);
 }

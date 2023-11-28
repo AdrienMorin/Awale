@@ -19,5 +19,9 @@ jsonString parseLogin(char *args[]);
 
 jsonString parseChallenge(char *args[]);
 
+jsonString acceptChallenge();
+
+jsonString refuseChallenge();
+
 void processResponse(cJSON *response, int *connected);
 #endif //AWALE_ACTIONMANAGER_H
