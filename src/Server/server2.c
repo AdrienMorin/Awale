@@ -108,7 +108,7 @@ static void app(void) {
                         char *commandString = malloc(sizeof(char) * strlen(buffer));
                         strcpy(commandString, buffer);
 
-                        cJSON response = processRequest(&client, clients, actual, commandString);
+                        cJSON response = processRequest(&clients[i], clients, actual, commandString);
 
                         jsonString responseString = cJSON_Print(&response);
 
