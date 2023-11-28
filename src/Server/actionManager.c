@@ -39,7 +39,7 @@
 //    return (command) {UNKNOWN, {}};
 //}
 
-cJSON processRequest(Client client, Client *clients, int nbClients, jsonString req) {
+cJSON processRequest(Client *client, Client clients[], int nbClients, jsonString req) {
     cJSON *requestJson = cJSON_Parse(req);
 
     cJSON *command = cJSON_GetObjectItemCaseSensitive(requestJson, "command");
@@ -64,11 +64,14 @@ cJSON processRequest(Client client, Client *clients, int nbClients, jsonString r
 
 }
 
-cJSON login(Client client, char *username, char *password) {
+cJSON login(Client *client, char *username, char *password) {
 
     joueur *j = getPlayerWithCredentials(username, password);
 
     if (j != NULL) {
+
+        strncpy(client->name, j->nomUtilisateur, 50);
+
         cJSON *response = cJSON_CreateObject();
         cJSON_AddStringToObject(response, "command", "login");
         cJSON_AddStringToObject(response, "status", "success");
@@ -83,7 +86,8 @@ cJSON login(Client client, char *username, char *password) {
         }
         cJSON_AddItemToObject(response, "cases", cases);
 
-        client.j = copierJoueur(j);
+        client->j = copierJoueur(j);
+
         return *response;
     } else {
         cJSON *response = cJSON_CreateObject();
@@ -125,7 +129,7 @@ joueur *getPlayerWithCredentials(char *username, char *password) {
 
 }
 
-cJSON listConnectedPlayers(Client c, Client *clients, int nbClients) {
+cJSON listConnectedPlayers(Client *c, Client *clients, int nbClients) {
     cJSON *response = cJSON_CreateObject();
     cJSON_AddStringToObject(response, "command", "list");
 
@@ -134,7 +138,7 @@ cJSON listConnectedPlayers(Client c, Client *clients, int nbClients) {
     for (int i = 0; i < nbClients; i++) {
 
         // On ne va quand meme pas dire au client qu'il est connecté dans la liste des participants !
-        if (clients[i].sock == c.sock) {
+        if (clients[i].sock == c->sock) {
             continue;
         }
 

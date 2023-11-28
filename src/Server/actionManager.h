@@ -32,11 +32,11 @@ typedef enum {
 
 cJSON parseRequest(jsonString request);
 
-cJSON processRequest(Client client, Client *clients, int nbClients, jsonString req);
+cJSON processRequest(Client *client, Client clients[], int nbClients, jsonString req);
 
-cJSON login(Client client, char *username, char *password);
+cJSON login(Client *client, char *username, char *password);
 
-cJSON listConnectedPlayers(Client c, Client *clients, int nbClients);
+cJSON listConnectedPlayers(Client *c, Client *clients, int nbClients);
 
 joueur *getPlayerWithCredentials(char *username, char *password);
 

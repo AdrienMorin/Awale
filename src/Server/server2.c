@@ -76,8 +76,6 @@ static void app(void) {
                 continue;
             }
 
-            printf("buffer : %s \n", buffer);
-
             /* what is the new maximum fd ? */
             max = csock > max ? csock : max;
 
@@ -110,7 +108,7 @@ static void app(void) {
                         char *commandString = malloc(sizeof(char) * strlen(buffer));
                         strcpy(commandString, buffer);
 
-                        cJSON response = processRequest(clients[i], clients, actual, commandString);
+                        cJSON response = processRequest(&client, clients, actual, commandString);
 
                         jsonString responseString = cJSON_Print(&response);
 
