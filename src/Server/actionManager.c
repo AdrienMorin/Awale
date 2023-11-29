@@ -198,6 +198,8 @@ cJSON login(Client *client, char *username, char *password, Client *clients, int
         }
         cJSON_AddItemToObject(response, "cases", cases);
 
+        // A modifier, faire en sorte de récup le joueur d'une partie s'il a le même pseudo
+        // Enlever le remove Client dans le main.
         client->j = copierJoueur(j);
         client->status = CONNECTED;
 
