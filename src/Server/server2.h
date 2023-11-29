@@ -33,6 +33,7 @@ typedef struct in_addr IN_ADDR;
 
 #include "client2.h"
 
+
 static void init(void);
 static void end(void);
 static void app(void);

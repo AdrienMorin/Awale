@@ -12,13 +12,14 @@ typedef struct partie {
     joueur* joueur2; // peut jouer les cases 6 à 11
     int nbCoups;
     joueur* quiJoue;
+    int finPartie;
 } partie;
 
-partie* initialiserPartie();
+partie *initialiserPartie(joueur *j1, joueur *j2);
 
 joueur* choisirJoueurAleatoire(joueur* j1, joueur* j2);
 
-void jouerCoup(partie* p, char* nomJoueur, int caseChoisie);
+int jouerCoup(partie *p, char *nomJoueur, int caseChoisie);
 
 int coupValide(partie* p, char* nomJoueur, int caseChoisie);
 
