@@ -12,4 +12,4 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/lib/cJSON)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/lib/CsvParser)
 
-configure_file(data/users.csv ${CMAKE_CURRENT_BINARY_DIR}/data/users.csv COPYONLY)
+configure_file(data/users.csv ${CMAKE_CURRENT_BINARY_DIR}/data/users.csv)

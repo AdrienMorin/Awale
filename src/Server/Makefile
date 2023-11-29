@@ -3,7 +3,7 @@ CFLAGS = -Wall -Wextra -g
 LDFLAGS = -lm
 TARGET = server
 
-SRCS = $(wildcard *.c) ../joueur.c
+SRCS = $(wildcard *.c) ../joueur.c ../../lib/CsvParser/csvparser.c ../../lib/cJSON/cJSON.c
 OBJS = $(SRCS:.c=.o)
 
 all: $(TARGET)

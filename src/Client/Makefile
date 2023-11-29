@@ -4,7 +4,7 @@ LDFLAGS = -lm
 TARGET = client
 
 
-SRCS = $(wildcard *.c)
+SRCS = $(wildcard *.c) ../../lib/cJSON/cJSON.c ../joueur.c
 OBJS = $(SRCS:.c=.o)
 
 all: $(TARGET)

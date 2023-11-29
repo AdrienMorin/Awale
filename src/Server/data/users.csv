@@ -1,4 +1,10 @@
-username,password,isConnected
-momo,momo,0
-john,doe,0
-alex,mdp,0
+username,password
+momo,momo
+john,doe
+alex,mdp
+testUser,test
+Test2,test
+momotest,test
+test,test
+test4,test
+test6,test

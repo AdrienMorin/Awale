@@ -8,7 +8,6 @@
 #include <errno.h>
 #include "actionManager.h"
 #include "csvWriter.h"
-#include "../../lib/libcsv/src/csv.h"
 
 #define FILEPATH "data/users.csv"
 
@@ -119,13 +118,8 @@ cJSON registerClient(char *username, char *password){
     joueur *j = getPlayerWithCredentials(username, password);
     if (j == NULL){
         printf("Inscription de %s\n", username);
-        char row[100];
-        strcpy(row, username);
-        strcat(row, ",");
-        strcat(row, password);
-        strcat(row, ",0");
-        printf("adding row : %s\n", row);
-        if (addRowToCSV("data\\users.csv", row) > 0) {
+        printf("adding row : %s\n", username);
+        if (addRowToCSV("data/users.csv", username, password) > 0) {
             cJSON_AddStringToObject(response, "command", "register");
             cJSON_AddStringToObject(response, "status", "success");
             cJSON_AddStringToObject(response, "message", "Vous avez bien été inscrit !");
@@ -146,16 +140,16 @@ cJSON registerClient(char *username, char *password){
 cJSON login(Client *client, char *username, char *password, Client *clients, int nbClients) {
 
     if (nbClients > 0){
-        for (int i = 0; i < nbClients-1; i++) {
-            if (strcmp(clients[i].j->nomUtilisateur, username) == 0) {
-                cJSON *response = cJSON_CreateObject();
-                cJSON_AddStringToObject(response, "command", "login");
-                cJSON_AddStringToObject(response, "status", "error");
-                cJSON_AddStringToObject(response, "message", "Ce compte est déjà connecté au serveur...");
-                return *response;
-            }
+        if (getClientByUsername(username, clients, nbClients) != NULL) {
+            cJSON *response = cJSON_CreateObject();
+            cJSON_AddStringToObject(response, "command", "login");
+            cJSON_AddStringToObject(response, "status", "error");
+            cJSON_AddStringToObject(response, "message", "Ce compte est déjà connecté au serveur...");
+            return *response;
         }
+
     }
+
 
     joueur *j = getPlayerWithCredentials(username, password);
 
@@ -325,14 +319,9 @@ cJSON sendChat(Client *client, Client *clients, int nbClients, char *username, c
 
     cJSON_AddStringToObject(response, "command", "chat");
     cJSON_AddStringToObject(response, "status", "success");
-    cJSON_AddStringToObject(response, "message", "Chat envoyée à");
-    cJSON_AddStringToObject(response, "from", username);
-    cJSON_AddNumberToObject(response, "sender_socket", client->sock);
-    cJSON_AddStringToObject(response, "to", dest->name);
-    cJSON_AddNumberToObject(response, "opponent_socket", dest->sock);
+
 
     // send the chat
-
     cJSON *chat = cJSON_CreateObject();
     cJSON_AddStringToObject(chat, "command", "chat");
     cJSON_AddStringToObject(chat, "status", "success");
@@ -407,6 +396,9 @@ cJSON refuseChallenge(Client *client) {
 
 Client *getClientByUsername(char *username, Client *clients, int nbClients) {
     for (int i = 0; i < nbClients; i++) {
+        if (clients[i].j == NULL){
+            continue;
+        }
         if (strcmp(clients[i].j->nomUtilisateur, username) == 0) {
             return &clients[i];
         }

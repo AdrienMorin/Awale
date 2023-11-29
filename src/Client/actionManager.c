@@ -17,6 +17,8 @@ joueur *j;
 
 jsonString parseRequest(char *buffer) {
     // split the content of the buffer on the space elements, and store it in an array
+    char bufferCopy[200];
+    strcpy(bufferCopy, buffer);
     char *token = strtok(buffer, " ");
     char *words[MAX_WORDS];
     int i = 0;
@@ -74,15 +76,21 @@ jsonString parseRequest(char *buffer) {
             return parseChallenge(words);
         }
     } else if (strncmp(words[0], "chat", 4) == 0) {
-        if (i != 2) {
+        if (i < 3) {
             printf("Tentative de chat: nombre invalide d'arguments\n");
-            printf("Usage: chat <username>\n");
+            printf("Usage: chat <username> [message]\n");
             return "error";
         } else {
-            char message[500];
-            printf("Entrez votre message (max 500 caractères): ");
-            scanf(" %[^\n]", message);
-            return parseChat(words, message);
+
+            int argumentsLength = (int) (strlen(words[0]) + strlen(words[1]) + 2);
+
+            char subtext[200-argumentsLength];
+
+            // Using memcpy to extract a substring
+            memcpy(subtext, &bufferCopy[argumentsLength], 199-argumentsLength);
+            subtext[199-argumentsLength] = '\0';  // Null-terminate the substring
+
+            return parseChat(words, subtext);
         }
     } else if (strncmp(words[0], "accept", 6) == 0) {
         if (i != 1) {
@@ -211,6 +219,16 @@ void processResponse(cJSON *response, int *connected) {
         }
     }
 
+    if (strncmp(commandString, "register", 8) == 0) {
+        cJSON *status = cJSON_GetObjectItemCaseSensitive(response, "status");
+
+        char *statusString = cJSON_GetStringValue(status);
+
+        char *message = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(response, "message"));
+
+        printf("%s : %s\n", statusString, message);
+    }
+
     if (strncmp(commandString, "chat", 4) == 0) {
         cJSON *status = cJSON_GetObjectItemCaseSensitive(response, "status");
 
@@ -220,10 +238,12 @@ void processResponse(cJSON *response, int *connected) {
 
         char *message = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(response, "message"));
 
-        if (strncmp(statusString, "success", 7) == 0) {
-            printf("Message de %s : %s\n", from, message);
-        } else {
-            printf("erreur de communication chat avec %s\n", from);
+        if (from != NULL){
+            if (strncmp(statusString, "success", 7) == 0) {
+                printf("Message de %s : %s\n", from, message);
+            } else {
+                printf("erreur de communication chat avec %s\n", from);
+            }
         }
     }
 
