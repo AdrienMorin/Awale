@@ -14,15 +14,16 @@ typedef enum {
 
 typedef struct Client
 {
-   SOCKET sock;
+    SOCKET sock;
     joueur *j;
     playerStatus status;
-   char name[BUF_SIZE];
+    char name[BUF_SIZE];
     struct challenge *challenge;
 }Client;
 
 typedef struct challenge {
     Client *challenger;
+    partie *p;
 } challenge;
 
 #endif /* guard */

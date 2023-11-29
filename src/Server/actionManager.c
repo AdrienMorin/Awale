@@ -9,6 +9,9 @@
 #include "actionManager.h"
 #include "csvWriter.h"
 
+
+partie *p[100];
+int nbParties = 0;
 #define FILEPATH "data/users.csv"
 
 //command parseRequest(jsonString request) {
@@ -42,12 +45,14 @@
 //    return (command) {UNKNOWN, {}};
 //}
 
-cJSON processRequest(Client *client, Client clients[], int nbClients, jsonString req) {
+void processRequest(Client *client, Client clients[], int nbClients, jsonString req) {
     cJSON *requestJson = cJSON_Parse(req);
 
     cJSON *command = cJSON_GetObjectItemCaseSensitive(requestJson, "command");
 
     char *commandString = cJSON_GetStringValue(command);
+
+    cJSON response;
 
     if (strncmp(commandString, "login", 5) == 0) {
         cJSON *username = cJSON_GetObjectItemCaseSensitive(requestJson, "username");
@@ -58,7 +63,8 @@ cJSON processRequest(Client *client, Client clients[], int nbClients, jsonString
 
         printf("Tentative de connexion, username : %s password : %s \n", usernameString, passwordString);
 
-        return login(client, usernameString, passwordString, clients, nbClients);
+        response = login(client, usernameString, passwordString, clients, nbClients);
+        write_client(client->sock, cJSON_Print(&response));
     }
 
     if (strncmp(commandString, "register", 8) == 0) {
@@ -70,11 +76,14 @@ cJSON processRequest(Client *client, Client clients[], int nbClients, jsonString
 
         printf("Tentative d'inscription, username : %s password : %s \n", usernameString, passwordString);
 
-        return registerClient(usernameString, passwordString);
+        response = registerClient(usernameString, passwordString);
+        write_client(client->sock, cJSON_Print(&response));
     }
 
     if (strncmp(commandString, "list", 4) == 0) {
-        return listConnectedPlayers(client, clients, nbClients);
+        response = listConnectedPlayers(client, clients, nbClients);
+
+        write_client(client->sock, cJSON_Print(&response));
     }
 
     if (strncmp(commandString, "challenge", 9) == 0) {
@@ -87,7 +96,9 @@ cJSON processRequest(Client *client, Client clients[], int nbClients, jsonString
         if (strncmp(stateString, "pending", 7) == 0) {
 
             // On envoie une demande de challenge
-            return sendChallengeRequest(client, clients, nbClients, usernameString);
+            response = sendChallengeRequest(client, clients, nbClients, usernameString);
+
+            write_client(client->sock, cJSON_Print(&response));
         }
     }
 
@@ -102,12 +113,26 @@ cJSON processRequest(Client *client, Client clients[], int nbClients, jsonString
 
     if (strncmp(commandString, "accept", 6) == 0) {
 
-        return acceptChallenge(client);
+        response = acceptChallenge(client);
+
+        // write_client(client->sock, cJSON_Print(&response));
+
+        lancerPartie(client, clients, nbClients);
     }
 
     if (strncmp(commandString, "refuse", 6) == 0) {
 
-        return refuseChallenge(client);
+        response = refuseChallenge(client);
+
+        write_client(client->sock, cJSON_Print(&response));
+    }
+
+    if (strncmp(commandString, "play", 4) == 0) {
+        cJSON *caseChoisie = cJSON_GetObjectItemCaseSensitive(requestJson, "caseChoisie");
+
+        int caseChoisieInt = (int) cJSON_GetNumberValue(caseChoisie);
+
+        jouerCoupServeur(client, caseChoisieInt);
     }
 
 }
@@ -274,7 +299,7 @@ cJSON sendChallengeRequest(Client *client, Client *clients, int nbClients, char 
     cJSON_AddStringToObject(response, "command", "challenge");
     cJSON_AddStringToObject(response, "status", "success");
     cJSON_AddStringToObject(response, "message", "Demande de challenge envoyée à");
-    cJSON_AddStringToObject(response, "sender", username);
+    cJSON_AddStringToObject(response, "sender", client->name);
     cJSON_AddNumberToObject(response, "sender_socket", client->sock);
     cJSON_AddStringToObject(response, "opponent", adversaire->name);
     cJSON_AddNumberToObject(response, "opponent_socket", adversaire->sock);
@@ -342,27 +367,17 @@ cJSON acceptChallenge(Client *client) {
 
     // On envoie la réponse au client qui a accepté le challenge
     cJSON *response = cJSON_CreateObject();
+
     cJSON_AddStringToObject(response, "command", "accept");
     cJSON_AddStringToObject(response, "status", "success");
-    cJSON_AddStringToObject(response, "message", "Vous avez accepté la demande de challenge de");
-    cJSON_AddStringToObject(response, "opponent", adversaire->name);
-    cJSON_AddNumberToObject(response, "opponent_socket", adversaire->sock);
+    cJSON_AddStringToObject(response, "joueur1", adversaire->name);
+    cJSON_AddStringToObject(response, "joueur2", client->name);
+    cJSON_AddStringToObject(response, "state", "accepted");
 
-    // On envoie la challengeRequest au client qui a envoyé la demande de challenge
-    cJSON *challengeRequest = cJSON_CreateObject();
-    cJSON_AddStringToObject(challengeRequest, "command", "accept");
-    cJSON_AddStringToObject(challengeRequest, "status", "success");
-    cJSON_AddStringToObject(challengeRequest, "message", "Votre adversaire a accepté votre demande de challenge");
-    cJSON_AddStringToObject(challengeRequest, "opponent", client->name);
-    cJSON_AddNumberToObject(challengeRequest, "opponent_socket", client->sock);
+    adversaire->challenge = malloc(sizeof(challenge));
+    adversaire->challenge->challenger = client;
 
-
-    write_client(adversaire->sock, cJSON_Print(challengeRequest));
-
-    cJSON_free(challengeRequest);
-
-    client->status = IN_GAME;
-    adversaire->status = IN_GAME;
+    //write_client(adversaire->sock, cJSON_Print(response));
 
     return *response;
 }
@@ -371,7 +386,7 @@ cJSON refuseChallenge(Client *client) {
     Client *adversaire = client->challenge->challenger;
 
     cJSON *response = cJSON_CreateObject();
-    cJSON_AddStringToObject(response, "command", "challenge");
+    cJSON_AddStringToObject(response, "command", "refuse");
     cJSON_AddStringToObject(response, "status", "success");
     cJSON_AddStringToObject(response, "message", "Vous avez refusé la demande de challenge de");
     cJSON_AddStringToObject(response, "opponent", adversaire->name);
@@ -379,18 +394,54 @@ cJSON refuseChallenge(Client *client) {
     cJSON_AddStringToObject(response, "state", "refused");
 
     cJSON *challengeRequest = cJSON_CreateObject();
-    cJSON_AddStringToObject(challengeRequest, "command", "challenge");
+    cJSON_AddStringToObject(challengeRequest, "command", "refuse");
     cJSON_AddStringToObject(challengeRequest, "status", "success");
     cJSON_AddStringToObject(challengeRequest, "message", "Votre adversaire a refusé votre demande de challenge");
     cJSON_AddStringToObject(challengeRequest, "opponent", client->name);
     cJSON_AddNumberToObject(challengeRequest, "opponent_socket", client->sock);
     cJSON_AddStringToObject(challengeRequest, "state", "refused");
 
+    client->status = CONNECTED;
+
     write_client(adversaire->sock, cJSON_Print(challengeRequest));
 
     cJSON_free(challengeRequest);
 
     return *response;
+}
+
+void lancerPartie(Client *client, Client *clients, int nbClients) {
+
+    client->j = initialiserJoueur(client->name);
+
+    Client *opponent = getClientByUsername(client->challenge->challenger->name, clients, nbClients);
+
+    partie *partie = initialiserPartie(client->j, opponent->j);
+
+    client->challenge->p = partie;
+
+    opponent->challenge->p = partie;
+
+    partie->quiJoue = choisirJoueurAleatoire(client->j, opponent->j);
+
+    p[nbParties] = partie;
+    nbParties++;
+
+    client->status = IN_GAME;
+    opponent->status = IN_GAME;
+
+    cJSON *response = cJSON_CreateObject();
+    cJSON_AddStringToObject(response, "command", "game started");
+    cJSON_AddStringToObject(response, "status", "success");
+    cJSON_AddStringToObject(response, "joueur1", client->name);
+    cJSON_AddStringToObject(response, "joueur2", opponent->name);
+    cJSON_AddStringToObject(response, "quiJoue", partie->quiJoue->nomUtilisateur);
+    cJSON_AddStringToObject(response, "state", "accepted");
+
+    write_client(client->sock, cJSON_Print(response));
+    write_client(opponent->sock, cJSON_Print(response));
+
+    cJSON_free(response);
 }
 
 
@@ -405,3 +456,54 @@ Client *getClientByUsername(char *username, Client *clients, int nbClients) {
     }
     return NULL;
 }
+
+void jouerCoupServeur(Client *client, int caseChoisie) {
+    partie *partie = client->challenge->p;
+
+    cJSON response;
+    if (coupValide(partie, client->name, caseChoisie)) {
+
+
+        int caseArrivee = egrener(partie, client->j, caseChoisie);
+
+        manger(partie, partie->quiJoue, caseArrivee);
+
+        partie->quiJoue = (partie->quiJoue == partie->joueur1) ? partie->joueur2 : partie->joueur1;
+
+        // add cases to response
+        cJSON *cases = cJSON_CreateArray();
+        for (int i = 0; i < 6; i++) {
+            cJSON_AddItemToArray(cases, cJSON_CreateNumber(client->j->cases[i]));
+        }
+
+        response = buildValidMoveResponse(client, client->challenge->challenger, caseChoisie);
+
+        cJSON_AddItemToObject(&response, "cases", cases);
+    } else {
+        response = buildInvalidMoveResponse(client, client->challenge->challenger);
+    }
+
+    write_client(client->sock, cJSON_Print(&response));
+    write_client(client->challenge->challenger->sock, cJSON_Print(&response));
+}
+
+cJSON buildValidMoveResponse(Client *client, Client *opponent, int caseChoisie) {
+    cJSON *response = cJSON_CreateObject();
+    cJSON_AddStringToObject(response, "command", "play");
+    cJSON_AddStringToObject(response, "status", "success");
+    cJSON_AddStringToObject(response, "state", "valid");
+    cJSON_AddNumberToObject(response, "caseChoisie", caseChoisie);
+
+    return *response;
+}
+
+cJSON buildInvalidMoveResponse(Client *client, Client *opponent) {
+    cJSON *response = cJSON_CreateObject();
+    cJSON_AddStringToObject(response, "command", "play");
+    cJSON_AddStringToObject(response, "status", "success");
+    cJSON_AddStringToObject(response, "state", "invalid");
+
+    return *response;
+}
+
+

@@ -12,7 +12,9 @@
 #define MAX_WORDS 50
 
 
-joueur *j;
+joueur *player;
+joueur *opponent;
+partie *p;
 
 
 jsonString parseRequest(char *buffer) {
@@ -109,6 +111,23 @@ jsonString parseRequest(char *buffer) {
         } else {
             return refuseChallenge();
         }
+    } else if (strncmp(words[0], "play", 4) == 0) {
+        if (i != 2) {
+            printf("Tentative de jouer: nombre invalide d'arguments\n");
+            printf("Usage: play <case>\n");
+            return "error";
+        } else {
+            return play((int) strtol(words[1], NULL, 10));
+        }
+    } else if (strncmp(words[0], "quit", 4) == 0) {
+        if (i != 1) {
+            printf("Tentative de quitter: nombre invalide d'arguments\n");
+            printf("Usage: quit\n");
+            return "error";
+        } else {
+
+            return quit();
+        }
     }
 
     return "error";
@@ -194,7 +213,6 @@ void processResponse(cJSON *response, int *connected) {
         char *username = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(response, "username"));
 
         if (strncmp(statusString, "success", 7) == 0) {
-            j = initialiserJoueur(username);
             *connected = TRUE;
             printf("Vous êtes connecté au serveur\n");
         } else {
@@ -208,12 +226,12 @@ void processResponse(cJSON *response, int *connected) {
 
         char *statusString = cJSON_GetStringValue(status);
 
-        char *opponent = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(response, "opponent"));
+        char *opponentString = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(response, "opponent"));
 
         char *message = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(response, "message"));
 
         if (strncmp(statusString, "success", 7) == 0) {
-            printf("%s %s !\n", message, opponent);
+            printf("%s %s !\n", message, opponentString);
         } else {
             printf("%s\n", message);
         }
@@ -252,12 +270,12 @@ void processResponse(cJSON *response, int *connected) {
 
         char *statusString = cJSON_GetStringValue(status);
 
-        char *opponent = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(response, "opponent"));
+        char *opponentName = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(response, "opponent"));
 
         char *message = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(response, "message"));
 
         if (strncmp(statusString, "success", 7) == 0) {
-            printf("Entering game with %s !\n", opponent);
+            printf("Entering game ...\n");
         } else {
             printf("%s\n", message);
         }
@@ -268,15 +286,35 @@ void processResponse(cJSON *response, int *connected) {
 
         char *statusString = cJSON_GetStringValue(status);
 
-        char *opponent = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(response, "opponent"));
+        char *opponentName = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(response, "opponent"));
 
         char *message = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(response, "message"));
 
         if (strncmp(statusString, "success", 7) == 0) {
-            printf("%s refused your challenge !\n", opponent);
+            printf("%s refused your challenge !\n", opponentName);
         } else {
             printf("%s\n", message);
         }
+    }
+
+    if (strncmp(commandString, "game started", 10) == 0) {
+        cJSON *status = cJSON_GetObjectItemCaseSensitive(response, "status");
+
+        char *statusString = cJSON_GetStringValue(status);
+
+        char *joueur1Name = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(response, "joueur1"));
+        char *joueur2Name = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(response, "joueur2"));
+        char *quiJoueName = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(response, "quiJoue"));
+
+        if (strncmp(statusString, "success", 7) == 0) {
+            lancerPartie(joueur1Name, joueur2Name, quiJoueName);
+        } else {
+            printf("error\n");
+        }
+    }
+
+    if (strncmp(commandString, "play", 4) == 0) {
+        updateGameState(p, *response);
     }
 
 }
@@ -295,6 +333,68 @@ jsonString refuseChallenge() {
     cJSON *request = cJSON_CreateObject();
 
     cJSON *command = cJSON_CreateString("refuse");
+
+    cJSON_AddItemToObject(request, "command", command);
+
+    return cJSON_Print(request);
+}
+
+void lancerPartie(char *playerName, char *opponentName, char *quiJoueName) {
+    player = initialiserJoueur(playerName);
+    opponent = initialiserJoueur(opponentName);
+
+    p = initialiserPartie(player, opponent);
+
+    if (strcmp(quiJoueName, player->nomUtilisateur) == 0) {
+        p->quiJoue = player;
+    } else {
+        p->quiJoue = opponent;
+    }
+
+    afficherPartie(p);
+}
+
+jsonString play(int caseChoisie) {
+
+    // build the response string to send to the server
+    cJSON *response = cJSON_CreateObject();
+
+    cJSON *command = cJSON_CreateString("play");
+    cJSON *caseChoisieJson = cJSON_CreateNumber(caseChoisie);
+
+    cJSON_AddItemToObject(response, "command", command);
+    cJSON_AddItemToObject(response, "caseChoisie", caseChoisieJson);
+
+    return cJSON_Print(response);
+
+}
+
+void updateGameState(partie *partie, cJSON response) {
+
+    cJSON *status = cJSON_GetObjectItemCaseSensitive(&response, "status");
+
+    char *statusString = cJSON_GetStringValue(status);
+
+    cJSON *state = cJSON_GetObjectItemCaseSensitive(&response, "state");
+
+    char *stateString = cJSON_GetStringValue(state);
+
+    if (strncmp(statusString, "success", 7) == 0) {
+        if (strncmp(stateString, "valid", 5) == 0) {
+            jouerCoup(partie, partie->quiJoue->nomUtilisateur,
+                      (int) cJSON_GetNumberValue(cJSON_GetObjectItemCaseSensitive(&response, "caseChoisie")));
+            afficherPartie(partie);
+        }
+
+    } else {
+        printf("error\n");
+    }
+}
+
+jsonString quit() {
+    cJSON *request = cJSON_CreateObject();
+
+    cJSON *command = cJSON_CreateString("quit");
 
     cJSON_AddItemToObject(request, "command", command);
 

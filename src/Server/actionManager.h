@@ -32,7 +32,7 @@ typedef enum {
 
 cJSON parseRequest(jsonString request);
 
-cJSON processRequest(Client *client, Client clients[], int nbClients, jsonString req);
+void processRequest(Client *client, Client clients[], int nbClients, jsonString req);
 
 cJSON login(Client *client, char *username, char *password, Client *clients, int nbClients);
 
@@ -51,6 +51,14 @@ cJSON listConnectedPlayers(Client *c, Client *clients, int nbClients);
 joueur *getPlayerWithCredentials(char *username, char *password);
 
 Client *getClientByUsername(char *username, Client *clients, int nbClients);
+
+void lancerPartie(Client *client, Client *clients, int nbClients);
+
+void jouerCoupServeur(Client *client, int caseChoisie);
+
+cJSON buildValidMoveResponse(Client *client, Client *opponent, int caseChoisie);
+
+cJSON buildInvalidMoveResponse(Client *client, Client *opponent);
 
 
 #endif //AWALE_ACTIONMANAGER_H

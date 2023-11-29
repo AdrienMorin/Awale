@@ -4,18 +4,15 @@
 #include <string.h>
 #include "partie.h"
 
-partie* initialiserPartie(){
+partie *initialiserPartie(joueur *j1, joueur *j2) {
 
     partie* p = malloc(sizeof(partie));
 
-    p->joueur1 = initialiserJoueur("morin");
-    initialiserCases(p->joueur1, JOUEUR1);
+    p->joueur1 = j1;
+    p->joueur2 = j2;
 
-    p->joueur2 = initialiserJoueur("mohamed");
-    initialiserCases(p->joueur2, JOUEUR2);
-
-    // tirer au sort qui joue en premier aleatoirement
-    p->quiJoue = choisirJoueurAleatoire(p->joueur1, p->joueur2);
+    initialiserCases(j1, JOUEUR1);
+    initialiserCases(j2, JOUEUR2);
 
     initialiserPlateau(p->plateau);
 
@@ -33,19 +30,20 @@ joueur* choisirJoueurAleatoire(joueur* j1, joueur* j2){
     return (randomIndex == 0) ? j1 : j2;
 }
 
-void jouerCoup(partie* p, char* nomJoueur, int caseChoisie){
+int jouerCoup(partie *p, char *nomJoueur, int caseChoisie) {
     if(!coupValide(p, nomJoueur, caseChoisie)){
-        return;
+        return FALSE;
     }
 
     int caseArrivee = egrener(p, p->quiJoue, caseChoisie);
 
     manger(p, p->quiJoue, caseArrivee);
 
-    p->nbCoups++;
+
 
     p->quiJoue = (p->quiJoue == p->joueur1) ? p->joueur2 : p->joueur1;
 
+    return TRUE;
 }
 
 void finirPartie(partie* p){
@@ -69,6 +67,8 @@ int egrener(partie *p, joueur *j, int caseChoisie) {
     }
 
     int caseArrivee = (caseChoisie + graines) % 12;
+
+    p->nbCoups++;
 
     return caseArrivee;
 }
