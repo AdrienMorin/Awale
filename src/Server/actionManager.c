@@ -108,7 +108,8 @@ void processRequest(Client *client, Client clients[], int nbClients, jsonString 
         char *usernameString = cJSON_GetStringValue(username);
 
         // On envoie un chat
-        return sendChat(client, clients, nbClients, usernameString, cJSON_Print(message));
+        response = sendChat(client, clients, nbClients, usernameString, cJSON_Print(message));
+        write_client(client->sock, cJSON_Print(&response));
     }
 
     if (strncmp(commandString, "accept", 6) == 0) {
