@@ -111,7 +111,11 @@ static void app(void) {
 
                         processRequest(&clients[i], clients, actual, commandString);
 
-
+                        if(client.status == DISCONNECTION_REQUEST) {
+                            closesocket(clients[i].sock);
+                            printf("Le client : %s se déconnecte du serveur\n", client.name);
+                            remove_client(clients, i, &actual);
+                        }
 
                         free(commandString);
                     }

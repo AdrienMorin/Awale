@@ -9,7 +9,8 @@ typedef enum {
     CONNECTED,
     CHALLENGED,
     IN_GAME,
-    DISCONNECTED
+    DISCONNECTED,
+    DISCONNECTION_REQUEST
 } playerStatus;
 
 typedef struct Client

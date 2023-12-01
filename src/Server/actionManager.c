@@ -136,6 +136,10 @@ void processRequest(Client *client, Client clients[], int nbClients, jsonString 
         jouerCoupServeur(client, caseChoisieInt);
     }
 
+    if (strncmp(commandString, "exit", 4) == 0) {
+        client->status = DISCONNECTION_REQUEST;
+    }
+
 }
 
 cJSON registerClient(char *username, char *password){

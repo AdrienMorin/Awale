@@ -68,6 +68,22 @@ jsonString parseRequest(char *buffer) {
 
             return cJSON_Print(request);
         }
+    } else if (strcmp(words[0], "exit") == 0) {
+        if (i != 1) {
+            printf("Tentative de exit: nombre invalide d'arguments\n");
+            printf("Usage: exit\n");
+
+            return "error";
+        } else {
+            cJSON *request = cJSON_CreateObject();
+
+            cJSON *command = cJSON_CreateString("exit");
+
+
+            cJSON_AddItemToObject(request, "command", command);
+
+            return cJSON_Print(request);
+        }
     } else if (strncmp(words[0], "challenge", 9) == 0) {
         if (i != 2) {
             printf("Tentative de challenge: nombre invalide d'arguments\n");
