@@ -6,7 +6,7 @@ add_executable(server server2.c actionManager.c
         ../../lib/libcsv/src/csv.c
 )
 
-target_link_libraries(server PRIVATE cjson csv_parser awale)
+target_link_libraries(server PRIVATE libcsv cjson csv_parser awale)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/lib/cJSON)
 

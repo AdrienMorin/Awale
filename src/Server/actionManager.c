@@ -258,9 +258,9 @@ cJSON listConnectedPlayers(Client *c, Client *clients, int nbClients) {
         cJSON_AddNumberToObject(player, "socket", clients[i].sock);
         cJSON_AddItemToArray(players, player);
 
-        cJSON_AddItemToObject(response, "players", players);
     }
 
+    cJSON_AddItemToObject(response, "players", players);
     return *response;
 }
 

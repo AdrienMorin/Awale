@@ -111,8 +111,6 @@ static void app(void) {
 
                         processRequest(&clients[i], clients, actual, commandString);
 
-
-
                         free(commandString);
                     }
                     break;
@@ -207,6 +205,7 @@ void write_client(SOCKET sock, const char *buffer) {
         exit(errno);
     }
 }
+
 
 int main(int argc, char **argv) {
     init();
