@@ -109,7 +109,7 @@ static void app(void) {
 
                         strcpy(commandString, buffer);
 
-                        processRequest(&clients[i], clients, actual, commandString);
+                        processRequest(&clients[i], clients, &actual, commandString);
 
                         free(commandString);
                     }
@@ -130,7 +130,7 @@ static void clear_clients(Client *clients, int actual) {
     }
 }
 
-static void remove_client(Client *clients, int to_remove, int *actual) {
+void remove_client(Client *clients, int to_remove, int *actual) {
     /* we remove the client in the array */
     memmove(clients + to_remove, clients + to_remove + 1, (*actual - to_remove - 1) * sizeof(Client));
     /* number client - 1 */

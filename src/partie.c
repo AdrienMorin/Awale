@@ -47,6 +47,8 @@ int jouerCoup(partie *p, char *nomJoueur, int caseChoisie) {
 }
 
 void finirPartie(partie* p){
+    free(p->joueur1);
+    free(p->joueur2);
     free(p);
 }
 

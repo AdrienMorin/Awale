@@ -6,14 +6,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "actionManager.h"
-#include "../../lib/cJSON/cJSON.h"
-#include "../partie.h"
 
 #define MAX_WORDS 50
 
 
-joueur *player;
-joueur *opponent;
+int inGame = FALSE;
 partie *p;
 
 
@@ -31,6 +28,9 @@ jsonString parseRequest(char *buffer) {
         token = strtok(NULL, " ");
         i++;
     }
+
+    // clear the buffer
+    memset(buffer, 0, strlen(buffer));
 
     // according to the first word, we call the proper command parsing function
 
@@ -105,7 +105,7 @@ jsonString parseRequest(char *buffer) {
         }
     } else if (strncmp(words[0], "refuse", 6) == 0) {
         if (i != 1) {
-            printf("Tentative de challenge: nombre invalide d'arguments\n");
+            printf("Refus de challenge: nombre invalide d'arguments\n");
             printf("Usage: refuse\n");
             return "error";
         } else {
@@ -113,9 +113,11 @@ jsonString parseRequest(char *buffer) {
         }
     } else if (strncmp(words[0], "play", 4) == 0) {
         if (i != 2) {
-            printf("Tentative de jouer: nombre invalide d'arguments\n");
+            printf("Tentative de jouer un coup: nombre invalide d'arguments\n");
             printf("Usage: play <case>\n");
             return "error";
+        } else if (inGame == FALSE) {
+            printf("Vous n'êtes pas en jeu...\n");
         } else {
             return play((int) strtol(words[1], NULL, 10));
         }
@@ -125,11 +127,44 @@ jsonString parseRequest(char *buffer) {
             printf("Usage: quit\n");
             return "error";
         } else {
+            quit();
+        }
+    } else if (strncmp(words[0], "disconnect", 10) == 0) {
+        if (i != 1) {
+            printf("Tentative de déconnexion: nombre invalide d'arguments\n");
+            printf("Usage: disconnect\n");
+            return "error";
+        } else {
 
-            return quit();
+            return disconnect();
+        }
+    } else if (strncmp(words[0], "surrender", 9) == 0) {
+        if (i != 1) {
+            printf("Tentative d'abandon: nombre invalide d'arguments\n");
+            printf("Usage: surrender\n");
+            return "error";
+        } else if (inGame == FALSE) {
+            printf("Vous n'êtes pas en jeu\n");
+            printf("Hellobacku...\n");
+            return "error";
+        } else {
+            printf("Etes-vous sûr de vouloir abandonner ? (y/n)\n");
+            char answer[2];
+
+            // keep asking for user input until the answer is y or n
+            while (strcmp(answer, "y") != 0 && strcmp(answer, "n") != 0) {
+                printf("Veuillez répondre par y ou n\n");
+                scanf("%s", answer);
+            }
+
+            // if the answer is y, build the surrender request
+            if (strcmp(answer, "y") == 0) {
+                return surrender();
+            }
         }
     }
 
+    printf("Commande inconnue...\n");
     return "error";
 
 }
@@ -210,8 +245,6 @@ void processResponse(cJSON *response, int *connected) {
 
         char *statusString = cJSON_GetStringValue(status);
 
-        char *username = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(response, "username"));
-
         if (strncmp(statusString, "success", 7) == 0) {
             *connected = TRUE;
             printf("Vous êtes connecté au serveur\n");
@@ -270,8 +303,6 @@ void processResponse(cJSON *response, int *connected) {
 
         char *statusString = cJSON_GetStringValue(status);
 
-        char *opponentName = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(response, "opponent"));
-
         char *message = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(response, "message"));
 
         if (strncmp(statusString, "success", 7) == 0) {
@@ -317,6 +348,48 @@ void processResponse(cJSON *response, int *connected) {
         updateGameState(p, *response);
     }
 
+    if (strncmp(commandString, "disconnect", 10) == 0) {
+        cJSON *status = cJSON_GetObjectItemCaseSensitive(response, "status");
+
+        char *statusString = cJSON_GetStringValue(status);
+
+        if (strncmp(statusString, "success", 7) == 0) {
+            *connected = FALSE;
+            inGame = FALSE;
+            printf("Vous êtes déconnecté du serveur\n");
+
+        } else {
+            printf("error\n");
+        }
+
+    }
+
+    if (strncmp(commandString, "game end", 8) == 0) {
+        cJSON *winOrLose = cJSON_GetObjectItemCaseSensitive(response, "state");
+        cJSON *status = cJSON_GetObjectItemCaseSensitive(response, "status");
+
+        char *winOrLoseString = cJSON_GetStringValue(winOrLose);
+        char *statusString = cJSON_GetStringValue(status);
+
+        if (strncmp(statusString, "success", 7) != 0) {
+            perror("error in game end");
+            return;
+        }
+
+        inGame = FALSE;
+        printf("La partie est terminée\n");
+
+        if (strncmp(winOrLoseString, "win", 3) == 0) {
+            printf("Vous avez gagné !\n");
+        } else if (strncmp(winOrLoseString, "lose", 4) == 0) {
+            printf("Vous avez perdu...\n");
+        } else if (strncmp(winOrLoseString, "draw", 4) == 0) {
+            printf("Vous avez fait match nul !\n");
+        }
+
+        finirPartie(p);
+    }
+
 }
 
 jsonString acceptChallenge() {
@@ -340,8 +413,8 @@ jsonString refuseChallenge() {
 }
 
 void lancerPartie(char *playerName, char *opponentName, char *quiJoueName) {
-    player = initialiserJoueur(playerName);
-    opponent = initialiserJoueur(opponentName);
+    joueur *player = initialiserJoueur(playerName);
+    joueur *opponent = initialiserJoueur(opponentName);
 
     p = initialiserPartie(player, opponent);
 
@@ -352,6 +425,7 @@ void lancerPartie(char *playerName, char *opponentName, char *quiJoueName) {
     }
 
     afficherPartie(p);
+    inGame = TRUE;
 }
 
 jsonString play(int caseChoisie) {
@@ -391,12 +465,48 @@ void updateGameState(partie *partie, cJSON response) {
     }
 }
 
-jsonString quit() {
+jsonString disconnect() {
     cJSON *request = cJSON_CreateObject();
 
-    cJSON *command = cJSON_CreateString("quit");
+    // check if the player is in game, output a confirmation prompt before building the disconnection request
+    if (inGame) {
+        printf("Vous êtes en jeu, voulez-vous vraiment vous déconnecter ?\n");
+        printf("Veuillez répondre par y ou n\n");
+        char answer[2];
+        scanf("%s", answer);
+
+        // keep asking for user input until the answer is y or n
+        while (strcmp(answer, "y") != 0 && strcmp(answer, "n") != 0) {
+            printf("Veuillez répondre par y ou n\n");
+            scanf("%s", answer);
+        }
+
+        // if the answer is y, build the disconnection request
+        if (strcmp(answer, "y") == 0) {
+            cJSON *command = cJSON_CreateString("disconnect");
+            cJSON_AddItemToObject(request, "command", command);
+            return cJSON_Print(request);
+        }
+    }
+
+    cJSON *command = cJSON_CreateString("disconnect");
+    cJSON_AddItemToObject(request, "command", command);
+    return cJSON_Print(request);
+
+}
+
+void quit() {
+    exit(0);
+}
+
+jsonString surrender() {
+
+    cJSON *request = cJSON_CreateObject();
+
+    cJSON *command = cJSON_CreateString("surrender");
 
     cJSON_AddItemToObject(request, "command", command);
 
     return cJSON_Print(request);
 }
+
