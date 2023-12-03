@@ -72,6 +72,10 @@ cJSON buildDrawResponse();
 
 cJSON buildPlayerIsIngameError(char *command);
 
+cJSON buildPlayerIsNotIngameError(char *command);
+
+cJSON buildPlayerIsNotConnectedError(char *command);
+
 cJSON disconnectClient(Client *client);
 
 cJSON surrender(Client *client);

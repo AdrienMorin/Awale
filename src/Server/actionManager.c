@@ -23,6 +23,13 @@ void processRequest(Client *client, Client clients[], int *nbClients, jsonString
 
     cJSON response;
 
+    if (client->status == DISCONNECTED && strncmp(commandString, "login", 5) != 0 &&
+        strncmp(commandString, "register", 8) != 0) {
+        response = buildPlayerIsNotConnectedError(commandString);
+        write_client(client->sock, cJSON_Print(&response));
+        return;
+    }
+
     if (strncmp(commandString, "login", 5) == 0) {
         cJSON *username = cJSON_GetObjectItemCaseSensitive(requestJson, "username");
         cJSON *password = cJSON_GetObjectItemCaseSensitive(requestJson, "password");
@@ -93,7 +100,11 @@ void processRequest(Client *client, Client clients[], int *nbClients, jsonString
 
         response = acceptChallenge(client);
 
-        lancerPartie(client, clients, *nbClients);
+        char *statusString = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(requestJson, "status"));
+
+        if (strncmp(statusString, "success", 7) == 0) {
+            lancerPartie(client, clients, *nbClients);
+        }
     }
 
     if (strncmp(commandString, "refuse", 6) == 0) {
@@ -104,6 +115,7 @@ void processRequest(Client *client, Client clients[], int *nbClients, jsonString
     }
 
     if (strncmp(commandString, "play", 4) == 0) {
+
         cJSON *caseChoisie = cJSON_GetObjectItemCaseSensitive(requestJson, "caseChoisie");
 
         int caseChoisieInt = (int) cJSON_GetNumberValue(caseChoisie);
@@ -134,6 +146,7 @@ void processRequest(Client *client, Client clients[], int *nbClients, jsonString
 }
 
 cJSON registerClient(char *username, char *password){
+
     cJSON *response = cJSON_CreateObject();
 
     joueur *j = getPlayerWithCredentials(username, password);
@@ -159,6 +172,20 @@ cJSON registerClient(char *username, char *password){
 }
 
 cJSON login(Client *client, char *username, char *password, Client *clients, int nbClients) {
+
+    if (client->status == CONNECTED) {
+        cJSON *response = cJSON_CreateObject();
+        cJSON_AddStringToObject(response, "command", "login");
+        cJSON_AddStringToObject(response, "status", "error");
+        cJSON_AddStringToObject(response, "message",
+                                "Tu dois te deconnecter avant de te connecter sur un autre compte.");
+
+        return *response;
+    }
+
+    if (client->status == IN_GAME) {
+        return buildPlayerIsIngameError("login");
+    }
 
     Client *c = getClientByUsername(username, clients, nbClients);
 
@@ -210,7 +237,6 @@ cJSON login(Client *client, char *username, char *password, Client *clients, int
 }
 
 joueur *getPlayerWithCredentials(char *username, char *password) {
-    int i = 0;
     CsvParser *csvparser = CsvParser_new("data/users.csv", ",", 1);
     CsvRow *row;
     const CsvRow *header = CsvParser_getHeader(csvparser);
@@ -237,8 +263,10 @@ joueur *getPlayerWithCredentials(char *username, char *password) {
 }
 
 cJSON listConnectedPlayers(Client *c, Client *clients, int nbClients) {
+
     cJSON *response = cJSON_CreateObject();
     cJSON_AddStringToObject(response, "command", "list");
+    cJSON_AddStringToObject(response, "status", "success");
 
     cJSON *players = cJSON_CreateArray();
 
@@ -262,6 +290,12 @@ cJSON listConnectedPlayers(Client *c, Client *clients, int nbClients) {
 }
 
 cJSON sendChallengeRequest(Client *client, Client *clients, int nbClients, char *username) {
+
+
+    if (client->status == IN_GAME) {
+        return buildPlayerIsIngameError("challenge");
+    }
+
     // envoyer la requete de challenge au bon client
     cJSON *response = cJSON_CreateObject();
 
@@ -329,6 +363,7 @@ cJSON sendChallengeRequest(Client *client, Client *clients, int nbClients, char 
 }
 
 cJSON sendChat(Client *client, Client *clients, int nbClients, char *username, char *message) {
+
     // envoyer la requete de challenge au bon client
     cJSON *response = cJSON_CreateObject();
 
@@ -338,6 +373,14 @@ cJSON sendChat(Client *client, Client *clients, int nbClients, char *username, c
         cJSON_AddStringToObject(response, "command", "challenge");
         cJSON_AddStringToObject(response, "status", "error");
         cJSON_AddStringToObject(response, "message", "L'utilisateur n'existe pas");
+
+        return *response;
+    }
+
+    if (dest->status == DISCONNECTED) {
+        cJSON_AddStringToObject(response, "command", "challenge");
+        cJSON_AddStringToObject(response, "status", "error");
+        cJSON_AddStringToObject(response, "message", "L'utilisateur n'est pas connecté");
 
         return *response;
     }
@@ -362,7 +405,21 @@ cJSON sendChat(Client *client, Client *clients, int nbClients, char *username, c
 }
 
 cJSON acceptChallenge(Client *client) {
+
+    if (client->status == IN_GAME) {
+        return buildPlayerIsIngameError("accept");
+    }
+
     Client *adversaire = client->challenge->challenger;
+
+    if (adversaire == NULL) {
+        cJSON *response = cJSON_CreateObject();
+        cJSON_AddStringToObject(response, "command", "accept");
+        cJSON_AddStringToObject(response, "status", "error");
+        cJSON_AddStringToObject(response, "message", "Vous n'avez pas de challenge en attente");
+
+        return *response;
+    }
 
     // On envoie la réponse au client qui a accepté le challenge
     cJSON *response = cJSON_CreateObject();
@@ -382,7 +439,19 @@ cJSON acceptChallenge(Client *client) {
 }
 
 cJSON refuseChallenge(Client *client) {
+
     Client *adversaire = client->challenge->challenger;
+
+
+    if (adversaire == NULL || client->status != CHALLENGED) {
+        cJSON *response = cJSON_CreateObject();
+        cJSON_AddStringToObject(response, "command", "accept");
+        cJSON_AddStringToObject(response, "status", "error");
+        cJSON_AddStringToObject(response, "message", "Vous n'avez pas de challenge en attente");
+
+        return *response;
+    }
+
 
     cJSON *response = cJSON_CreateObject();
     cJSON_AddStringToObject(response, "command", "refuse");
@@ -457,6 +526,14 @@ Client *getClientByUsername(char *username, Client *clients, int nbClients) {
 }
 
 void jouerCoupServeur(Client *client, int caseChoisie) {
+
+    if (client->status != IN_GAME) {
+        cJSON response = buildPlayerIsNotIngameError("play");
+        write_client(client->sock, cJSON_Print(&response));
+
+        return;
+    }
+
     partie *partie = client->challenge->p;
 
     cJSON response;
@@ -508,7 +585,7 @@ cJSON buildValidMoveResponse(Client *client, Client *opponent, int caseChoisie) 
 cJSON buildInvalidMoveResponse(Client *client, Client *opponent) {
     cJSON *response = cJSON_CreateObject();
     cJSON_AddStringToObject(response, "command", "play");
-    cJSON_AddStringToObject(response, "status", "success");
+    cJSON_AddStringToObject(response, "status", "error");
     cJSON_AddStringToObject(response, "state", "invalid");
 
     return *response;
@@ -638,6 +715,11 @@ cJSON buildDrawResponse() {
 }
 
 cJSON surrender(Client *client) {
+
+    if (client->status != IN_GAME) {
+        return buildPlayerIsNotIngameError("surrender");
+    }
+
     cJSON *response = cJSON_CreateObject();
 
     sendWinByForfeitResponse(client);
@@ -655,8 +737,10 @@ cJSON surrender(Client *client) {
 }
 
 cJSON listIngamePlayers(Client *c, Client *clients, int nbClients) {
+
     cJSON *response = cJSON_CreateObject();
     cJSON_AddStringToObject(response, "command", "list");
+    cJSON_AddStringToObject(response, "status", "success");
 
     cJSON *players = cJSON_CreateArray();
 
@@ -685,9 +769,28 @@ cJSON buildPlayerIsIngameError(char *command) {
     cJSON *response = cJSON_CreateObject();
     cJSON_AddStringToObject(response, "command", command);
     cJSON_AddStringToObject(response, "status", "error");
-    cJSON_AddStringToObject(response, "message", "Le joueur est déjà en train de jouer");
+    cJSON_AddStringToObject(response, "message", "Vous ne pouvez pas effectuer cette action en pleine partie");
 
     return *response;
 }
 
+cJSON buildPlayerIsNotIngameError(char *command) {
+    cJSON *response = cJSON_CreateObject();
+    cJSON_AddStringToObject(response, "command", command);
+    cJSON_AddStringToObject(response, "status", "error");
+    cJSON_AddStringToObject(response, "message", "Vous ne pouvez utiliser cette action que si vous êtes en partie");
 
+    return *response;
+}
+
+cJSON buildPlayerIsNotConnectedError(char *command) {
+    cJSON *response = cJSON_CreateObject();
+    cJSON_AddStringToObject(response, "command", command);
+    cJSON_AddStringToObject(response, "status", "error");
+    cJSON_AddStringToObject(response, "message",
+                            "Vous n'êtes pas connecté au serveur\n"
+                            "Veuillez vous connecter : login <username> <password>\n"
+                            "Ou bien vous enregistrer : register <username> <password>");
+
+    return *response;
+}
