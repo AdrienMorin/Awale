@@ -98,6 +98,9 @@ static void app(void) {
 
                     /* client disconnected */
                     if (c == 0) {
+                        if (clients[i].status == IN_GAME) {
+                            sendWinByForfeitResponse(&clients[i]);
+                        }
                         closesocket(clients[i].sock);
                         printf("Le client : %s se déconnecte du serveur\n", client.name);
                         remove_client(clients, i, &actual);
