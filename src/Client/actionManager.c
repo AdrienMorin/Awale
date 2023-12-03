@@ -307,7 +307,12 @@ void processResponse(cJSON *response, int *connected) {
         char *message = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(response, "message"));
 
         if (strncmp(statusString, "success", 7) == 0) {
-            printf("%s %s !\n Tappez 'accept' pour accepter ou 'refuse' pour refuser.\n", message, opponentString);
+            if(strncmp(statusString, "Vous avez reçu une demande de challenge de", 42) == 0){
+                printf("%s %s !\n Tappez 'accept' pour accepter ou 'refuse' pour refuser.\n", message, opponentString);
+            } else {
+                printf("%s %s !\n", message, opponentString);
+            }
+
         } else {
             printf("%s\n", message);
         }
@@ -379,7 +384,7 @@ void processResponse(cJSON *response, int *connected) {
         char *message = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(response, "message"));
 
         if (strncmp(statusString, "success", 7) == 0) {
-            printf("Entering game ...\n");
+            printf("Lancement du jeu ...\n");
         } else {
             printf("%s\n", message);
         }
@@ -395,7 +400,7 @@ void processResponse(cJSON *response, int *connected) {
         char *message = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(response, "message"));
 
         if (strncmp(statusString, "success", 7) == 0) {
-            printf("%s refused your challenge !\n", opponentName);
+            printf("%s a refusé votre challenge !\n", opponentName);
         } else {
             printf("%s\n", message);
         }
@@ -445,7 +450,7 @@ void processResponse(cJSON *response, int *connected) {
         char *statusString = cJSON_GetStringValue(status);
 
         if (strncmp(statusString, "success", 7) != 0) {
-            perror("error in game end");
+            perror("Erreur lors de la fin de jeu");
             return;
         }
 

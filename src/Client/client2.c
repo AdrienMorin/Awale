@@ -102,7 +102,7 @@ static void app(const char *address) {
 
             processResponse(response, &connected);
 
-            puts(buffer);
+            //puts(buffer);
         }
     }
 
