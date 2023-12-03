@@ -100,7 +100,8 @@ void processRequest(Client *client, Client clients[], int *nbClients, jsonString
 
         response = acceptChallenge(client);
 
-        char *statusString = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(requestJson, "status"));
+        cJSON *status = cJSON_GetObjectItemCaseSensitive(&response, "status");
+        char *statusString = cJSON_GetStringValue(status);
 
         if (strncmp(statusString, "success", 7) == 0) {
             lancerPartie(client, clients, *nbClients);
@@ -216,14 +217,15 @@ cJSON login(Client *client, char *username, char *password, Client *clients, int
         // If the client was already connected, we just need to update his status
         if (c != NULL) {
             c->status = CONNECTED;
+            client->j = copierJoueur(j);
             return *response;
         }
 
 
         // else we need to create a new client
+        client->j = copierJoueur(j);
         strncpy(client->name, j->nomUtilisateur, 50);
 
-        client->j = copierJoueur(j);
         client->status = CONNECTED;
 
         return *response;
@@ -410,9 +412,9 @@ cJSON acceptChallenge(Client *client) {
         return buildPlayerIsIngameError("accept");
     }
 
-    Client *adversaire = client->challenge->challenger;
+    challenge *pChallenge = client->challenge;
 
-    if (adversaire == NULL) {
+    if (pChallenge == NULL) {
         cJSON *response = cJSON_CreateObject();
         cJSON_AddStringToObject(response, "command", "accept");
         cJSON_AddStringToObject(response, "status", "error");
@@ -420,6 +422,8 @@ cJSON acceptChallenge(Client *client) {
 
         return *response;
     }
+
+    Client *adversaire = pChallenge->challenger;
 
     // On envoie la réponse au client qui a accepté le challenge
     cJSON *response = cJSON_CreateObject();
@@ -600,6 +604,8 @@ cJSON disconnectClient(Client *client) {
         Client *opponent = client->challenge->challenger;
         opponent->status = CONNECTED;
     }
+
+    free(client->j);
 
     client->status = DISCONNECTED;
 

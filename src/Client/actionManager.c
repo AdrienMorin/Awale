@@ -30,7 +30,7 @@ jsonString parseRequest(char *buffer) {
     }
 
     // clear the buffer
-    memset(buffer, 0, strlen(buffer));
+    //memset(buffer, 0, strlen(buffer));
 
     // according to the first word, we call the proper command parsing function
 
@@ -138,22 +138,7 @@ jsonString parseRequest(char *buffer) {
             return "error";
         } else {
 
-            printf("Voulez-vous vraiment vous déconnecter ?\n");
-            printf("Veuillez répondre par y ou n\n");
-
-            char answer[2];
-            scanf("%s", answer);
-
-            // keep asking for user input until the answer is y or n
-            while (strcmp(answer, "y") != 0 && strcmp(answer, "n") != 0) {
-                printf("Veuillez répondre par y ou n\n");
-                scanf("%s", answer);
-            }
-
-            // if the answer is y, build the disconnection request
-            if (strcmp(answer, "y") == 0) {
-                return disconnect();
-            }
+            return disconnect();
 
         }
     } else if (strncmp(words[0], "surrender", 9) == 0) {
@@ -162,19 +147,9 @@ jsonString parseRequest(char *buffer) {
             printf("Usage: surrender\n");
             return "error";
         } else {
-            printf("Etes-vous sûr de vouloir abandonner ? (y/n)\n");
-            char answer[2];
 
-            // keep asking for user input until the answer is y or n
-            while (strcmp(answer, "y") != 0 && strcmp(answer, "n") != 0) {
-                printf("Veuillez répondre par y ou n\n");
-                scanf("%s", answer);
-            }
+            return surrender();
 
-            // if the answer is y, build the surrender request
-            if (strcmp(answer, "y") == 0) {
-                return surrender();
-            }
         }
     }
 
