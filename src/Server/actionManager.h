@@ -48,6 +48,8 @@ cJSON refuseChallenge(Client *client);
 
 cJSON listConnectedPlayers(Client *c, Client *clients, int nbClients);
 
+cJSON listIngamePlayers(Client *c, Client *clients, int nbClients);
+
 joueur *getPlayerWithCredentials(char *username, char *password);
 
 Client *getClientByUsername(char *username, Client *clients, int nbClients);
@@ -67,6 +69,8 @@ cJSON buildWinnerResponse();
 cJSON buildLoserResponse();
 
 cJSON buildDrawResponse();
+
+cJSON buildPlayerIsIngameError(char *command);
 
 cJSON disconnectClient(Client *client);
 

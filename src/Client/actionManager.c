@@ -53,18 +53,19 @@ jsonString parseRequest(char *buffer) {
             return parseRegister(words);
         }
     } else if (strcmp(words[0], "list") == 0) {
-        if (i != 1) {
-            printf("Tentative de list: nombre invalide d'arguments\n");
-            printf("Usage: list\n");
+        if (i != 2 || (strcmp(words[1], "ingame") != 0 && strcmp(words[1], "available") != 0)) {
+
+            printf("Usage: list <ingame> or <available>\n");
 
             return "error";
         } else {
             cJSON *request = cJSON_CreateObject();
 
             cJSON *command = cJSON_CreateString("list");
-
+            cJSON *listType = cJSON_CreateString(words[1]);
 
             cJSON_AddItemToObject(request, "command", command);
+            cJSON_AddItemToObject(request, "listType", listType);
 
             return cJSON_Print(request);
         }

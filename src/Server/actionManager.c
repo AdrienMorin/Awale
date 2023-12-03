@@ -50,7 +50,15 @@ void processRequest(Client *client, Client clients[], int *nbClients, jsonString
     }
 
     if (strncmp(commandString, "list", 4) == 0) {
-        response = listConnectedPlayers(client, clients, *nbClients);
+
+        cJSON *listType = cJSON_GetObjectItemCaseSensitive(requestJson, "listType");
+        char *listTypeString = cJSON_GetStringValue(listType);
+
+        if (strncmp(listTypeString, "available", 9) == 0) {
+            response = listConnectedPlayers(client, clients, *nbClients);
+        } else if (strncmp(listTypeString, "ingame", 6) == 0) {
+            response = listIngamePlayers(client, clients, *nbClients);
+        }
 
         write_client(client->sock, cJSON_Print(&response));
     }
@@ -641,6 +649,42 @@ cJSON surrender(Client *client) {
     client->status = CONNECTED;
 
     *response = buildLoserResponse();
+
+    return *response;
+}
+
+cJSON listIngamePlayers(Client *c, Client *clients, int nbClients) {
+    cJSON *response = cJSON_CreateObject();
+    cJSON_AddStringToObject(response, "command", "list");
+
+    cJSON *players = cJSON_CreateArray();
+
+    for (int i = 0; i < nbClients; i++) {
+
+        // On ne va quand meme pas dire au client qu'il est connecté dans la liste des participants !
+        if (clients[i].sock == c->sock) {
+            continue;
+        }
+
+        if (clients[i].status == IN_GAME) {
+            cJSON *player = cJSON_CreateObject();
+            cJSON_AddStringToObject(player, "username", clients[i].j->nomUtilisateur);
+            cJSON_AddNumberToObject(player, "socket", clients[i].sock);
+            cJSON_AddItemToArray(players, player);
+        }
+
+    }
+
+    cJSON_AddItemToObject(response, "players", players);
+
+    return *response;
+}
+
+cJSON buildPlayerIsIngameError(char *command) {
+    cJSON *response = cJSON_CreateObject();
+    cJSON_AddStringToObject(response, "command", command);
+    cJSON_AddStringToObject(response, "status", "error");
+    cJSON_AddStringToObject(response, "message", "Le joueur est déjà en train de jouer");
 
     return *response;
 }
