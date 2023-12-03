@@ -290,7 +290,7 @@ void processResponse(cJSON *response, int *connected) {
 
         if (strncmp(statusString, "success", 7) == 0) {
             *connected = TRUE;
-            printf("Vous êtes connecté au serveur\n");
+            printf("Vous êtes connecté au serveur !\n");
         } else {
             printf("Erreur lors de la connexion: %s\n",messageString);
         }
@@ -307,7 +307,7 @@ void processResponse(cJSON *response, int *connected) {
         char *message = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(response, "message"));
 
         if (strncmp(statusString, "success", 7) == 0) {
-            printf("%s %s !\n", message, opponentString);
+            printf("%s %s !\n Tappez 'accept' pour accepter ou 'refuse' pour refuser.\n", message, opponentString);
         } else {
             printf("%s\n", message);
         }
@@ -338,6 +338,36 @@ void processResponse(cJSON *response, int *connected) {
             } else {
                 printf("erreur de communication chat avec %s\n", from);
             }
+        }
+    }
+
+    if (strncmp(commandString, "list", 4) == 0) {
+        cJSON *playersArray = cJSON_GetObjectItemCaseSensitive(response, "players");
+
+        int i, arraySize;
+
+        if (playersArray == NULL || playersArray->type != cJSON_Array) {
+            fprintf(stderr, "Format JSON invalide ou argument manquant dans la liste des joueurs.\n");
+            return;
+        }
+
+        arraySize = cJSON_GetArraySize(playersArray);
+
+        printf("Liste des joueurs :\n");
+        for (i = 0; i < arraySize; i++) {
+            cJSON *player = cJSON_GetArrayItem(playersArray, i);
+
+            cJSON *username = cJSON_GetObjectItem(player, "username");
+
+            if (username && username->type == cJSON_String) {
+                printf("- %s\n", username->valuestring);
+            } else {
+                fprintf(stderr, "Erreur de format JSON à l'élément numéro %d.\n", i);
+            }
+        }
+
+        if (i==0){
+            printf("Aucun joueur...\n");
         }
     }
 
