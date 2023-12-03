@@ -202,7 +202,8 @@ cJSON login(Client *client, char *username, char *password, Client *clients, int
         return *response;
     } else {
         cJSON *response = cJSON_CreateObject();
-        cJSON_AddStringToObject(response, "response", "error");
+        cJSON_AddStringToObject(response, "command", "login");
+        cJSON_AddStringToObject(response, "status", "error");
         cJSON_AddStringToObject(response, "message", "mauvais username ou mot de passe");
         return *response;
     }

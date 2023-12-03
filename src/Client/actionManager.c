@@ -283,11 +283,16 @@ void processResponse(cJSON *response, int *connected) {
 
         char *statusString = cJSON_GetStringValue(status);
 
+        cJSON *message = cJSON_GetObjectItemCaseSensitive(response, "message");
+
+        char *messageString = cJSON_GetStringValue(message);
+
+
         if (strncmp(statusString, "success", 7) == 0) {
             *connected = TRUE;
             printf("Vous êtes connecté au serveur\n");
         } else {
-            printf("Login failed\n");
+            printf("Erreur lors de la connexion: %s\n",messageString);
         }
     }
 
