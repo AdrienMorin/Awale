@@ -39,6 +39,8 @@ static void app(const char *address) {
 
     joueur *j = NULL;
 
+    printHelloMessage();
+
     while (1) {
         FD_ZERO(&rdfs);
 
@@ -74,16 +76,19 @@ static void app(const char *address) {
 
             char *commandString = cJSON_GetStringValue(command);
 
-            if (strncmp(request, "error", 5) == 0) {
-                printf("Invalid command\n");
-            } else if (connected == FALSE &&
-                       (strncmp(commandString, "login", 5) != 0 && strncmp(commandString, "register", 8) != 0)) {
-                printf("Vous devez être connecté pour faire cette action.\n");
-                printf("Veuillez vous connecter : login <username> <password>\n");
-                printf("Ou bien vous enregistrer : register <username> <password>\n");
-            } else {
-                write_server(sock, request);
+            if (request != NULL){
+                if (strncmp(request, "error", 5) == 0) {
+                    printf("Invalid command\n");
+                } else if (connected == FALSE &&
+                           (strncmp(commandString, "login", 5) != 0 && strncmp(commandString, "register", 8) != 0) && strncmp(commandString, "help", 4) != 0) {
+                    printf("Vous devez être connecté pour faire cette action.\n");
+                    printf("Veuillez vous connecter : login <username> <password>\n");
+                    printf("Ou bien vous enregistrer : register <username> <password>\n");
+                } else {
+                    write_server(sock, request);
+                }
             }
+
 
         } else if (FD_ISSET(sock, &rdfs)) {
             int n = read_server(sock, buffer);

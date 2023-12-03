@@ -44,4 +44,9 @@ jsonString surrender();
 void disconnectConfirmationMenu(char *message, int *connected);
 
 void processResponse(cJSON *response, int *connected);
+
+void printHelloMessage();
+
+void printHelpMessage();
+
 #endif //AWALE_ACTIONMANAGER_H

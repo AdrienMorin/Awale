@@ -130,6 +130,9 @@ jsonString parseRequest(char *buffer) {
         } else {
             quit();
         }
+    } else if (strncmp(words[0], "help", 4) == 0) {
+        printHelpMessage();
+        return NULL;
     } else if (strncmp(words[0], "disconnect", 10) == 0) {
         if (i != 1) {
             printf("Tentative de déconnexion: nombre invalide d'arguments\n");
@@ -226,6 +229,40 @@ jsonString parseChallenge(char *args[]) {
     cJSON_AddItemToObject(request, "state", state);
 
     return cJSON_Print(request);
+}
+
+void printHelloMessage(){
+    printf("Bonjour et Bienvenue dans le serveur de jeux Awale en ligne !\n\n");
+    printf("Veuillez vous connecter : login <username> <password>\n");
+    printf("Ou bien vous enregistrer : register <username> <password>\n");
+}
+
+void printHelpMessage(){
+    printf("Voici la liste des commandes que vous pouvez utiliser :\n"
+           "\n"
+           "- login <pseudo> <motdepasse>\n"
+           "    -> pour vous login au serveur à l'aide d'un pseudo et mot de passe.\n"
+           "- register <username> <password>\n"
+           "    -> pour créer un compte assocé à un pseudo et mot de passe.\n"
+           "- list <ingame> or <available>\n"
+           "    -> pour lister les utilisateurs en fonction de leur status.\n"
+           "    list ingame renverra les utilisateurs actuellement en jeu, tandis que list available renverra les utilisateurs disponibles.\n"
+           "- chat <username> [message]\n"
+           "    -> permet d'envoyer un message à un utilisateur donné. exemple : chat adrien bonjour, comment vas-tu ?\n"
+           "- challenge <username>\n"
+           "    -> permet de challenger un utilisateur, c'est à dire, lui proposer de jouer contre vous.\n"
+           "- accept\n"
+           "    -> pour accepter un challenge et lancer une partie.\n"
+           "- refuse\n"
+           "    -> pour refuser un challenge.\n"
+           "- play <case>\n"
+           "    -> permet de jouer une case\n"
+           "- quit\n"
+           "    -> pour quitter une partie\n"
+           "- disconnect\n"
+           "    -> pour se déconnecter du serveur\n"
+           "- surrender\n"
+           "    -> pour terminer la partie en se déclarant perdant.\n");
 }
 
 void processResponse(cJSON *response, int *connected) {
