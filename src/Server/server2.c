@@ -86,6 +86,7 @@ static void app(void) {
             strncpy(c.name, buffer, BUF_SIZE - 1);
 
             clients[actual] = c;
+            clients[actual].status = DISCONNECTED;
             actual++;
         } else {
             int i = 0;

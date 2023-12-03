@@ -37,11 +37,7 @@ void quit();
 
 jsonString disconnect();
 
-jsonString disconeectConfirmation(int *connected);
-
 jsonString surrender();
-
-void disconnectConfirmationMenu(char *message, int *connected);
 
 void processResponse(cJSON *response, int *connected);
 
